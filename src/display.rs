@@ -8,34 +8,171 @@ pub fn format_tree(root: &DirectoryEntry, config: &DisplayConfig) -> Result<Stri
 
     // Start with root
     output.push_str(".\n");
+    lines_remaining -= 1;
 
-    // Process root's children
+    // First pass: count minimum required lines
+    let min_lines = count_essential_lines(&root.children);
+    let can_expand = lines_remaining > min_lines;
+
+    // Process root's children with dynamic folding
     let mut children = root.children.clone();
     sort_entries(&mut children, config);
 
-    let total = children.len();
-    let mut processed = 0;
+    let total_items = children.len();
+    let mut current_index = 0;
 
-    for (i, child) in children.iter().enumerate() {
-        if lines_remaining == 0 {
-            break;
-        }
-        processed += 1;
+    // First pass - show as many items as possible
+    while current_index < children.len() && lines_remaining > 1 {
+        // Keep one line for potential summary
         format_entry(
-            child,
+            &children[current_index],
             "",
-            i == total - 1,
+            current_index == children.len() - 1,
             config,
+            can_expand,
             &mut lines_remaining,
             &mut output,
         );
+        current_index += 1;
     }
 
-    if processed < total && lines_remaining > 0 {
-        output.push_str(&format!("... {} more items\n", total - processed));
+    // If we couldn't show all items and have a line remaining, show summary
+    if current_index < total_items && lines_remaining > 0 {
+        let hidden_count = total_items - current_index;
+        if hidden_count > 1 {
+            output.push_str(&format!(
+                "├── ... {} more items (use --max-lines {} to see all)\n",
+                hidden_count,
+                total_items + 1
+            ));
+        } else if hidden_count == 1 {
+            // Show the last item if possible
+            format_entry(
+                &children[current_index],
+                "",
+                true,
+                config,
+                false,
+                &mut lines_remaining,
+                &mut output,
+            );
+        }
     }
 
     Ok(output)
+}
+fn count_essential_lines(entries: &[DirectoryEntry]) -> usize {
+    entries.len() + // one line per entry
+    entries.iter().filter(|e| e.is_gitignored && e.is_dir).count() // folding messages
+}
+
+/// Formats directory contents with smart display logic:
+/// When content doesn't fit within limits, shows both ends of the sorted list
+/// to maintain sorting context (e.g., newest and oldest files when sorting by date)
+fn format_directory_contents(
+    children: &[DirectoryEntry],
+    config: &DisplayConfig,
+    prefix: &str,
+    can_expand: bool,
+    lines_remaining: &mut usize,
+    output: &mut String,
+) {
+    let total = children.len();
+    if total == 0 {
+        return;
+    }
+
+    // Determine how many items to show
+    let items_to_show = if can_expand {
+        total
+    } else {
+        config.dir_limit.min(total)
+    };
+
+    let show_head_tail = !can_expand && total > items_to_show;
+
+    if show_head_tail {
+        let items_each_end = items_to_show / 2;
+        let hidden_count = total - (items_each_end * 2);
+
+        // Show first N items
+        for (_i, child) in children.iter().take(items_each_end).enumerate() {
+            if *lines_remaining == 0 {
+                return;
+            }
+            format_entry(
+                child,
+                prefix,
+                false,
+                config,
+                can_expand,
+                lines_remaining,
+                output,
+            );
+        }
+
+        // Show hidden items count
+        if *lines_remaining > 0 && hidden_count > 0 {
+            if hidden_count > 1 {
+                output.push_str(&format!(
+                    "{}│   ... {} items folded (use --dir-limit {} to see all) ...\n",
+                    prefix, hidden_count, total
+                ));
+                *lines_remaining -= 1;
+            } else {
+                // If only one item is hidden and we have space, try to show it
+                if let Some(hidden_item) = children
+                    .iter()
+                    .skip(items_each_end)
+                    .take(hidden_count)
+                    .next()
+                {
+                    format_entry(
+                        hidden_item,
+                        prefix,
+                        true,
+                        config,
+                        can_expand,
+                        lines_remaining,
+                        output,
+                    );
+                }
+            }
+        }
+
+        // Show last N items
+        for (i, child) in children.iter().skip(total - items_each_end).enumerate() {
+            if *lines_remaining == 0 {
+                return;
+            }
+            let is_last = i == items_each_end - 1;
+            format_entry(
+                child,
+                prefix,
+                is_last,
+                config,
+                can_expand,
+                lines_remaining,
+                output,
+            );
+        }
+    } else {
+        // Show all or first N items
+        for (i, child) in children.iter().take(items_to_show).enumerate() {
+            if *lines_remaining == 0 {
+                return;
+            }
+            format_entry(
+                child,
+                prefix,
+                i == items_to_show - 1,
+                config,
+                can_expand,
+                lines_remaining,
+                output,
+            );
+        }
+    }
 }
 
 fn format_entry(
@@ -43,6 +180,7 @@ fn format_entry(
     prefix: &str,
     is_last: bool,
     config: &DisplayConfig,
+    can_expand: bool,
     lines_remaining: &mut usize,
     output: &mut String,
 ) {
@@ -54,59 +192,37 @@ fn format_entry(
     let child_prefix = if is_last { "    " } else { "│   " };
 
     // Format the current entry
-    let mut entry_line = format!("{}{}{}", prefix, connector, entry.name,);
+    let mut entry_line = format!("{}{}{}", prefix, connector, entry.name);
 
-    if entry.is_gitignored {
-        // Show the directory with its metadata
-        entry_line.push_str(&format!(" {}", format_metadata(entry)));
+    // Handle ignored directories - always fold them regardless of can_expand
+    if entry.is_gitignored && entry.is_dir {
+        entry_line.push_str(&format!(" {} [folded: system]", format_metadata(entry)));
         output.push_str(&entry_line);
         output.push('\n');
         *lines_remaining -= 1;
-
-        // Add an indented note about why it's folded
-        if entry.is_dir {
-            output.push_str(&format!(
-                "{}{}... contents folded (.gitignore)\n",
-                prefix, child_prefix
-            ));
-            *lines_remaining -= 1;
-        }
-        return;
-    } else {
-        entry_line.push_str(&format!(" {}", format_metadata(entry)));
-        output.push_str(&entry_line);
-        output.push('\n');
-        *lines_remaining -= 1;
+        return; // Stop here, don't process children of ignored directories
     }
-    // Process children if it's a directory and not ignored
-    if entry.is_dir && !entry.is_gitignored {
+
+    // Add metadata
+    entry_line.push_str(&format!(" {}", format_metadata(entry)));
+    output.push_str(&entry_line);
+    output.push('\n');
+    *lines_remaining -= 1;
+
+    // Process children if it's a directory and NOT ignored
+    if entry.is_dir {
         let mut children = entry.children.clone();
         sort_entries(&mut children, config);
 
-        let to_show = children.len().min(config.dir_limit);
-        let hidden = children.len() - to_show;
-
-        for (i, child) in children.iter().take(to_show).enumerate() {
-            if *lines_remaining == 0 {
-                return;
-            }
-            format_entry(
-                child,
-                &format!("{}{}", prefix, child_prefix),
-                i == to_show - 1 && hidden == 0,
-                config,
-                lines_remaining,
-                output,
-            );
-        }
-
-        if hidden > 0 && *lines_remaining > 0 {
-            output.push_str(&format!(
-                "{}{}... {} more items\n",
-                prefix, child_prefix, hidden
-            ));
-            *lines_remaining -= 1;
-        }
+        format_directory_contents(
+            &children,
+            config,
+            &format!("{}{}", prefix, child_prefix),
+            // Only allow expansion for non-ignored directories
+            can_expand && !entry.is_gitignored,
+            lines_remaining,
+            output,
+        );
     }
 }
 
@@ -144,7 +260,6 @@ fn format_time(time: SystemTime) -> String {
     let duration = time.duration_since(UNIX_EPOCH).unwrap_or_default();
     let secs = duration.as_secs();
 
-    // Get current time
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()

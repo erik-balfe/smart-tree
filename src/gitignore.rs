@@ -12,6 +12,11 @@ impl GitIgnore {
             // System defaults that should always be included
             ".git".to_string(),
             ".DS_Store".to_string(),
+            ".svn".to_string(),        // SVN version control
+            ".hg".to_string(),         // Mercurial version control
+            ".idea".to_string(),       // IntelliJ IDE
+            ".vscode".to_string(),     // VS Code
+            "__pycache__".to_string(), // Python cache
         ];
 
         // Add patterns from .gitignore if it exists
