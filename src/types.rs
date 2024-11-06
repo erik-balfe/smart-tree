@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 use std::time::SystemTime;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DirectoryEntry {
+    #[allow(dead_code)]
     pub path: PathBuf,
     pub name: String,
     pub is_dir: bool,
@@ -11,12 +12,12 @@ pub struct DirectoryEntry {
     pub is_gitignored: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EntryMetadata {
     pub size: u64,
     pub created: SystemTime,
     pub modified: SystemTime,
-    pub files_count: usize, // Total files in this dir and subdirs
+    pub files_count: usize,
 }
 
 #[derive(Debug, Clone)]

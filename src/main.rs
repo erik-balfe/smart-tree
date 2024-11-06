@@ -1,41 +1,58 @@
-use anyhow::{Context, Result};
 use clap::Parser;
 use std::path::PathBuf;
-use std::process::Command;
+mod display;
+mod gitignore;
+mod scanner;
+mod types;
 
-/// A smarter tree command that folds large and hidden directories
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about)]
 struct Args {
     /// Directory path to display
     #[arg(default_value = ".")]
     path: PathBuf,
 
-    /// Maximum number of files to show in a directory before folding
+    /// Maximum number of lines in output
+    #[arg(long, default_value_t = 200)]
+    max_lines: usize,
+
+    /// Maximum items per directory
     #[arg(long, default_value_t = 20)]
-    limit: usize,
+    dir_limit: usize,
 
-    /// Additional arguments to pass to tree command
-    #[arg(last = true)]
-    tree_args: Vec<String>,
+    /// Maximum depth to traverse
+    #[arg(short = 'L', long, default_value_t = usize::MAX)]
+    max_depth: usize,
+
+    /// Sort entries by (name|size|modified|created)
+    #[arg(long, default_value = "name")]
+    sort_by: String,
+
+    /// List directories before files
+    #[arg(long)]
+    dirs_first: bool,
 }
 
-fn run_tree(path: &PathBuf, args: &[String]) -> Result<String> {
-    let output = Command::new("tree")
-        .arg(path)
-        .args(args)
-        .output()
-        .context("Failed to execute tree command")?;
-
-    String::from_utf8(output.stdout).context("Failed to parse tree output")
-}
-
-fn main() -> Result<()> {
+fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
-    // For now, just run tree and print output
-    let output = run_tree(&args.path, &args.tree_args)?;
-    println!("{}", output);
+    let config = types::DisplayConfig {
+        max_lines: args.max_lines,
+        dir_limit: args.dir_limit,
+        sort_by: match args.sort_by.as_str() {
+            "size" => types::SortBy::Size,
+            "modified" => types::SortBy::Modified,
+            "created" => types::SortBy::Created,
+            _ => types::SortBy::Name,
+        },
+        dirs_first: args.dirs_first,
+    };
 
+    // We'll implement these modules next
+    let gitignore = gitignore::GitIgnore::load(&args.path)?;
+    let root = scanner::scan_directory(&args.path, &gitignore, args.max_depth)?;
+    let output = display::format_tree(&root, &config)?;
+
+    println!("{}", output);
     Ok(())
 }
