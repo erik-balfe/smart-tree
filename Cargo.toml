@@ -2,6 +2,14 @@
 name = "smart-tree"
 version = "0.1.0"
 edition = "2021"
+authors = ["Erik Balfe"]
+description = "A modern directory tree viewer with intelligent folding and display options"
+homepage = "https://github.com/erik-balfe/smart-tree"
+repository = "https://github.com/erik-balfe/smart-tree"
+license = "MIT"
+readme = "README.MD"
+keywords = ["cli", "tree", "directory", "filesystem"]
+categories = ["command-line-utilities", "filesystem"]
 
 [dev-dependencies]
 pretty_assertions = "1.4"

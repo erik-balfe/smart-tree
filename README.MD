@@ -258,6 +258,22 @@ Planned enhancements for future versions:
 
 ## Installation
 
+### Quick Install (Linux, macOS)
+
+```bash
+# Easy install script
+curl -sSL https://raw.githubusercontent.com/erik-balfe/smart-tree/master/install.sh | sh
+```
+
+### macOS via Homebrew
+
+```bash
+# Homebrew installation will be available soon
+brew install erik-balfe/tap/smart-tree
+```
+
+### Manual Installation
+
 ```bash
 # Install from source
 git clone https://github.com/erik-balfe/smart-tree.git
@@ -267,6 +283,10 @@ cargo install --path .
 # Now you can run from anywhere
 smart-tree [path] [options]
 ```
+
+### Pre-built Binaries
+
+You can also download pre-built binaries for your platform from the [GitHub Releases page](https://github.com/erik-balfe/smart-tree/releases).
 
 ## Usage
 
