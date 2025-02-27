@@ -1,1 +1,32 @@
+# Rust build artifacts
 /target
+**/*.rs.bk
+Cargo.lock
+*.pdb
+
+# Version control systems
+.git
+.jj
+
+# IDE and editor files
+.vscode/
+.idea/
+.zed/
+*.swp
+*.swo
+.DS_Store
+
+# Environment files
+.env
+.env.local
+*.env*
+
+# Logs and backups
+*.log
+*.bak
+*.tmp
+
+# Profiling and debugging files
+perf.data
+perf.data.old
+flamegraph.svg
