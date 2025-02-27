@@ -16,6 +16,9 @@ Cargo.lock
 *.swo
 .DS_Store
 
+# Local development files
+CLAUDE.md
+
 # Environment files
 .env
 .env.local
