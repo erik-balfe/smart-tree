@@ -17,11 +17,12 @@ pub fn format_tree(root: &DirectoryEntry, config: &DisplayConfig) -> Result<Stri
     Ok(state.output)
 }
 
+#[allow(dead_code)]
 fn format_single_entry(
     entry: &DirectoryEntry,
     prefix: &str,
     is_last: bool,
-    config: &DisplayConfig,
+    _config: &DisplayConfig,  // Renamed to _config to avoid unused warning
 ) -> String {
     let connector = if is_last { "└── " } else { "├── " };
 
