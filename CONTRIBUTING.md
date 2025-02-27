@@ -67,9 +67,12 @@ All CI checks must pass before a pull request can be merged.
 
 Releases are automated through GitHub Actions:
 
-1. Create a version branch (e.g., `v0.1.0`) from `master`
-2. Push the branch to trigger the release workflow
-3. The workflow will:
+1. Create and push a tag for the version (e.g., `v0.1.0`)
+   ```bash
+   git tag -a v0.1.0 -m "Release v0.1.0"
+   git push origin v0.1.0
+   ```
+2. The workflow will be triggered automatically and:
    - Run tests, formatting checks, and linter
    - Build binaries for Linux, macOS, and Windows
    - Create a GitHub Release with the binaries attached

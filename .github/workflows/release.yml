@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches:
+    tags:
       - 'v[0-9]+*'  # Matches v1.0.0, v20.15.10, etc.
 
 env:
@@ -20,23 +20,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Get version from branch
+      - name: Get version from tag
         id: get_version
         run: |
-          VERSION=${GITHUB_REF#refs/heads/v}
+          VERSION=${GITHUB_REF#refs/tags/v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Detected version: $VERSION"
       
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          release_name: Release v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
           draft: false
           prerelease: false
+          generate_release_notes: true
 
   build-and-upload:
     name: Build and upload
@@ -82,11 +80,6 @@ jobs:
           cp ${{ env.RELEASE_BIN }}.exe ${{ matrix.asset_name }}
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
+          files: ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
