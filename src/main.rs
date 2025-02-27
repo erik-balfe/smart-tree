@@ -1,9 +1,7 @@
+use anyhow::Result;
 use clap::Parser;
+use smart_tree::{format_tree, scan_directory, DisplayConfig, GitIgnore, SortBy};
 use std::path::PathBuf;
-mod display;
-mod gitignore;
-mod scanner;
-mod types;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -33,25 +31,39 @@ struct Args {
     dirs_first: bool,
 }
 
-fn main() -> anyhow::Result<()> {
+fn init_logger() {
+    // In debug builds, use "debug" as default level
+    // In release builds, disable logging completely
+    let default_level = if cfg!(debug_assertions) {
+        "debug"
+    } else {
+        "off"
+    };
+
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(default_level))
+        .format_timestamp(None)
+        .init();
+}
+
+fn main() -> Result<()> {
+    init_logger();
     let args = Args::parse();
 
-    let config = types::DisplayConfig {
+    let config = DisplayConfig {
         max_lines: args.max_lines,
         dir_limit: args.dir_limit,
         sort_by: match args.sort_by.as_str() {
-            "size" => types::SortBy::Size,
-            "modified" => types::SortBy::Modified,
-            "created" => types::SortBy::Created,
-            _ => types::SortBy::Name,
+            "size" => SortBy::Size,
+            "modified" => SortBy::Modified,
+            "created" => SortBy::Created,
+            _ => SortBy::Name,
         },
         dirs_first: args.dirs_first,
     };
 
-    // We'll implement these modules next
-    let gitignore = gitignore::GitIgnore::load(&args.path)?;
-    let root = scanner::scan_directory(&args.path, &gitignore, args.max_depth)?;
-    let output = display::format_tree(&root, &config)?;
+    let gitignore = GitIgnore::load(&args.path)?;
+    let root = scan_directory(&args.path, &gitignore, args.max_depth)?;
+    let output = format_tree(&root, &config)?;
 
     println!("{}", output);
     Ok(())
