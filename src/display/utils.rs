@@ -53,7 +53,7 @@ pub(super) fn format_time(time: SystemTime) -> String {
     }
 }
 
-pub(super) fn sort_entries(entries: &mut Vec<DirectoryEntry>, config: &DisplayConfig) {
+pub(super) fn sort_entries(entries: &mut [DirectoryEntry], config: &DisplayConfig) {
     entries.sort_by(|a, b| {
         if config.dirs_first {
             if a.is_dir && !b.is_dir {

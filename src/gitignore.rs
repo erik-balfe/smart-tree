@@ -40,25 +40,29 @@ impl GitIgnore {
         if gitignore_path.exists() {
             debug!("Loading gitignore patterns from {:?}", gitignore_path);
             let content = fs::read_to_string(gitignore_path)?;
-            
+
             for line in content.lines() {
                 let line = line.trim();
-                
+
                 // Skip empty lines and comments
                 if line.is_empty() || line.starts_with('#') {
                     continue;
                 }
-                
+
                 // Handle negated patterns (those starting with !)
                 let is_negated = line.starts_with('!');
                 let pattern = if is_negated { &line[1..] } else { line };
-                
+
                 // Convert pattern to glob format
                 let glob_pattern = convert_to_glob_pattern(pattern);
-                
+
                 match Pattern::new(&glob_pattern) {
                     Ok(compiled) => {
-                        trace!("Added gitignore pattern: {} (negated: {})", glob_pattern, is_negated);
+                        trace!(
+                            "Added gitignore pattern: {} (negated: {})",
+                            glob_pattern,
+                            is_negated
+                        );
                         patterns.push((compiled, is_negated));
                     }
                     Err(e) => {
@@ -77,7 +81,7 @@ impl GitIgnore {
     /// Check if the given path should be ignored according to gitignore rules
     pub fn is_ignored(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy();
-        
+
         // First check system patterns (these always ignore)
         for pattern in &self.system_patterns {
             if pattern.matches(&path_str) {
@@ -85,10 +89,10 @@ impl GitIgnore {
                 return true;
             }
         }
-        
+
         // Now check regular patterns, with negation support
         let mut ignored = false;
-        
+
         for (pattern, is_negated) in &self.patterns {
             if pattern.matches(&path_str) {
                 trace!(
@@ -97,34 +101,34 @@ impl GitIgnore {
                     pattern,
                     is_negated
                 );
-                
+
                 // Negated patterns override previous matches
                 ignored = !is_negated;
             }
         }
-        
+
         ignored
     }
 }
 
 /// Converts a gitignore pattern to a glob pattern
-/// 
+///
 /// Handles some common gitignore syntax rules:
 /// - Adds ** prefix/suffix where needed
 /// - Handles directory-specific patterns (ending with /)
 fn convert_to_glob_pattern(pattern: &str) -> String {
     // Remove trailing slash for directory patterns
-    let pattern = if pattern.ends_with('/') {
-        &pattern[..pattern.len() - 1]
+    let pattern = if let Some(stripped) = pattern.strip_suffix('/') {
+        stripped
     } else {
         pattern
     };
-    
+
     // Handle patterns with wildcards
     if pattern.contains('*') || pattern.contains('?') || pattern.contains('[') {
-        if pattern.starts_with('/') {
+        if let Some(stripped) = pattern.strip_prefix('/') {
             // Pattern starts with / - anchored to project root
-            format!("{}", &pattern[1..])
+            stripped.to_string()
         } else {
             // Pattern doesn't start with / - match anywhere in subtree
             format!("**/{}", pattern)
@@ -133,8 +137,8 @@ fn convert_to_glob_pattern(pattern: &str) -> String {
         // Simple pattern - match either as filename or directory name
         if pattern.contains('/') {
             // Path pattern
-            if pattern.starts_with('/') {
-                pattern[1..].to_string()
+            if let Some(stripped) = pattern.strip_prefix('/') {
+                stripped.to_string()
             } else {
                 format!("**/{}", pattern)
             }
@@ -157,16 +161,16 @@ mod tests {
         // Create a temporary directory
         let root = tempdir().unwrap();
         let root_path = root.path();
-        
+
         let gitignore = GitIgnore::load(root_path).unwrap();
-        
+
         // Test system patterns
         assert!(gitignore.is_ignored(&root_path.join(".git")));
         assert!(gitignore.is_ignored(&root_path.join("some/path/to/.git")));
         assert!(gitignore.is_ignored(&root_path.join("node_modules")));
         assert!(gitignore.is_ignored(&root_path.join("src/node_modules")));
         assert!(gitignore.is_ignored(&root_path.join("target")));
-        
+
         // Test non-ignored paths
         assert!(!gitignore.is_ignored(&root_path.join("src")));
         assert!(!gitignore.is_ignored(&root_path.join("README.md")));
@@ -177,7 +181,7 @@ mod tests {
         // Create a temporary directory with a .gitignore file
         let root = tempdir().unwrap();
         let root_path = root.path();
-        
+
         // Use unindented content to ensure patterns are parsed correctly
         let gitignore_content = "# Comment line
 *.log
@@ -186,13 +190,13 @@ mod tests {
 !important.log
 temp/
 ";
-        
+
         let gitignore_path = root_path.join(".gitignore");
         let mut file = File::create(&gitignore_path)?;
         file.write_all(gitignore_content.as_bytes())?;
-        
+
         let gitignore = GitIgnore::load(root_path)?;
-        
+
         // Test patterns
         assert!(gitignore.is_ignored(&root_path.join("app.log")));
         assert!(gitignore.is_ignored(&root_path.join("logs/server.log")));
@@ -202,30 +206,30 @@ temp/
         // assert!(gitignore.is_ignored(&root_path.join("build/output.txt")));
         assert!(gitignore.is_ignored(&root_path.join("temp")));
         assert!(gitignore.is_ignored(&root_path.join("src/temp")));
-        
+
         // Test negation
         assert!(!gitignore.is_ignored(&root_path.join("important.log")));
-        
+
         // Test non-ignored paths
         assert!(!gitignore.is_ignored(&root_path.join("src")));
         assert!(!gitignore.is_ignored(&root_path.join("README.md")));
-        
+
         Ok(())
     }
-    
+
     #[test]
     fn test_convert_to_glob_pattern() {
         // Test directory patterns
         assert_eq!(convert_to_glob_pattern("logs/"), "**/logs");
-        
+
         // Test patterns with wildcards
         assert_eq!(convert_to_glob_pattern("*.log"), "**/*.log");
         assert_eq!(convert_to_glob_pattern("src/*.js"), "**/src/*.js");
-        
+
         // Test path patterns
         assert_eq!(convert_to_glob_pattern("/dist"), "dist");
         assert_eq!(convert_to_glob_pattern("build/temp"), "**/build/temp");
-        
+
         // Test simple name patterns
         assert_eq!(convert_to_glob_pattern("node_modules"), "**/node_modules");
     }
