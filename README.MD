@@ -288,6 +288,22 @@ smart-tree [path] [options]
 
 You can also download pre-built binaries for your platform from the [GitHub Releases page](https://github.com/erik-balfe/smart-tree/releases).
 
+## Contributing
+
+We welcome contributions to Smart Tree! The project has a full CI/CD pipeline set up with GitHub Actions that:
+
+- Runs tests automatically on every push and pull request
+- Checks code formatting with `rustfmt`
+- Runs the `clippy` linter for code quality
+- Generates binaries for multiple platforms when a release is triggered
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions on:
+- Setting up your development environment
+- Our branching strategy and workflow
+- Code style guidelines
+- Testing requirements
+- How to create releases
+
 ## Usage
 
 ```bash
