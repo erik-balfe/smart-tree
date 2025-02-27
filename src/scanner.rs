@@ -15,7 +15,7 @@ pub fn scan_directory(
         .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_else(|| root.to_string_lossy().to_string());
-    
+
     // Early return for non-directories or when max_depth is 0
     if !root_metadata.is_dir() || max_depth == 0 {
         return Ok(DirectoryEntry {
@@ -32,7 +32,7 @@ pub fn scan_directory(
             is_gitignored: gitignore.is_ignored(root),
         });
     }
-    
+
     // Initialize the root entry with temporary metadata
     // We'll calculate accurate size and file count as we traverse
     let mut root_entry = DirectoryEntry {
@@ -48,13 +48,13 @@ pub fn scan_directory(
         children: Vec::new(),
         is_gitignored: gitignore.is_ignored(root),
     };
-    
+
     // For gitignored directories, provide basic metadata without deep traversal
     if root_entry.is_gitignored {
         // Do a quick scan to get file counts without going deep
         let mut file_count = 0;
         let mut total_size = 0;
-        
+
         if let Ok(entries) = fs::read_dir(root) {
             for entry in entries.flatten() {
                 if let Ok(metadata) = entry.metadata() {
@@ -69,21 +69,21 @@ pub fn scan_directory(
                 }
             }
         }
-        
+
         // If total size is still 0 but we know it's a directory, use a placeholder size
         if total_size == 0 && file_count > 0 {
             total_size = 1024 * 1024; // 1MB placeholder
         }
-        
+
         // Update the metadata
         root_entry.metadata.files_count = file_count;
         root_entry.metadata.size = total_size;
-        
+
         return Ok(root_entry);
     }
-    
+
     let mut entries = Vec::new();
-    
+
     // Read the directory and process entries
     for dir_entry in fs::read_dir(root)? {
         let dir_entry = dir_entry?;
@@ -91,7 +91,7 @@ pub fn scan_directory(
         let metadata = dir_entry.metadata()?;
         let name = dir_entry.file_name().to_string_lossy().to_string();
         let is_gitignored = gitignore.is_ignored(&path);
-        
+
         if metadata.is_dir() {
             // Recursively scan subdirectories if depth allows
             if max_depth > 1 {
@@ -121,7 +121,7 @@ pub fn scan_directory(
                     children: Vec::new(),
                     is_gitignored,
                 });
-                
+
                 // Update parent size
                 root_entry.metadata.size += metadata.len();
             }
@@ -129,7 +129,7 @@ pub fn scan_directory(
             // For files, update parent metadata and add to entries
             root_entry.metadata.files_count += 1;
             root_entry.metadata.size += metadata.len();
-            
+
             entries.push(DirectoryEntry {
                 path,
                 name,
@@ -145,9 +145,9 @@ pub fn scan_directory(
             });
         }
     }
-    
+
     // Set the children
     root_entry.children = entries;
-    
+
     Ok(root_entry)
 }

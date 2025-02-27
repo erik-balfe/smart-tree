@@ -95,7 +95,8 @@ fn test_head_tail_pattern() {
 
     println!("Output:\n{}", state.output);
 
-    let visible_lines: Vec<_> = state.output
+    let visible_lines: Vec<_> = state
+        .output
         .lines()
         .filter(|l| !l.contains("items hidden"))
         .collect();
@@ -154,7 +155,8 @@ fn test_nested_directory_budget() {
             let dir_content = extract_directory_content(&state.output, dir);
             assert!(
                 !dir_content.is_empty(),
-                "Directory {} should show some content", dir
+                "Directory {} should show some content",
+                dir
             );
         }
     }
@@ -193,13 +195,18 @@ fn test_real_project_structure() {
         let mut state = DisplayState::new(config.max_lines, &config);
         state.show_items(&src_contents, "");
 
-        println!("\nTesting with max_lines = {}:\n{}", max_lines, state.output);
+        println!(
+            "\nTesting with max_lines = {}:\n{}",
+            max_lines, state.output
+        );
 
         // Verify line limit
         let line_count = state.output.lines().count();
         assert!(
             line_count <= max_lines,
-            "Output exceeded {} lines (got {})", max_lines, line_count
+            "Output exceeded {} lines (got {})",
+            max_lines,
+            line_count
         );
 
         // Verify content visibility
@@ -265,30 +272,42 @@ fn test_expanded_project_structure() {
 
     // Test cases with expected content checks
     let test_cases = vec![
-        (5, ExpectedContent {
-            should_show_src: false,
-            should_show_src_contents: false,
-            min_visible_items: 2,
-            should_show_head_tail: false,
-        }),
-        (10, ExpectedContent {
-            should_show_src: true,
-            should_show_src_contents: true,
-            min_visible_items: 4,
-            should_show_head_tail: true,
-        }),
-        (15, ExpectedContent {
-            should_show_src: true,
-            should_show_src_contents: true,
-            min_visible_items: 6,
-            should_show_head_tail: true,
-        }),
-        (20, ExpectedContent {
-            should_show_src: true,
-            should_show_src_contents: true,
-            min_visible_items: 8,
-            should_show_head_tail: true,
-        }),
+        (
+            5,
+            ExpectedContent {
+                should_show_src: false,
+                should_show_src_contents: false,
+                min_visible_items: 2,
+                should_show_head_tail: false,
+            },
+        ),
+        (
+            10,
+            ExpectedContent {
+                should_show_src: true,
+                should_show_src_contents: true,
+                min_visible_items: 4,
+                should_show_head_tail: true,
+            },
+        ),
+        (
+            15,
+            ExpectedContent {
+                should_show_src: true,
+                should_show_src_contents: true,
+                min_visible_items: 6,
+                should_show_head_tail: true,
+            },
+        ),
+        (
+            20,
+            ExpectedContent {
+                should_show_src: true,
+                should_show_src_contents: true,
+                min_visible_items: 8,
+                should_show_head_tail: true,
+            },
+        ),
     ];
 
     for (max_lines, expected) in test_cases {
@@ -325,7 +344,8 @@ fn test_expanded_project_structure() {
         }
 
         // Count visible items (non-hidden lines)
-        let visible_items = output.lines()
+        let visible_items = output
+            .lines()
             .filter(|l| !l.contains("items hidden"))
             .count();
 
@@ -333,14 +353,19 @@ fn test_expanded_project_structure() {
 
         // Basic structure checks based on available space
         if expected.should_show_src {
-            assert!(output.contains("src"), "Should show src directory with {} lines", max_lines);
+            assert!(
+                output.contains("src"),
+                "Should show src directory with {} lines",
+                max_lines
+            );
         }
 
         if expected.should_show_src_contents {
             // For src directory
             assert!(
                 output.contains("display") || output.contains("main.rs"),
-                "Should show some src directory contents with {} lines", max_lines
+                "Should show some src directory contents with {} lines",
+                max_lines
             );
 
             // Verify head/tail pattern if expected
@@ -348,7 +373,9 @@ fn test_expanded_project_structure() {
                 let src_section = output
                     .lines()
                     .skip_while(|l| !l.contains("src"))
-                    .take_while(|l| l.starts_with("│   ") || l.starts_with("├──") || l.starts_with("└──"))
+                    .take_while(|l| {
+                        l.starts_with("│   ") || l.starts_with("├──") || l.starts_with("└──")
+                    })
                     .collect::<Vec<_>>()
                     .join("\n");
 
@@ -408,29 +435,20 @@ fn test_extended_head_tail_pattern() {
     println!("Output:\n{}", state.output);
 
     let output = state.output;
-    
+
     println!("\nContent analysis:");
     for line in output.lines() {
         println!("{}", line);
     }
 
     // Should show directory
-    assert!(
-        output.contains("src"),
-        "Should show src directory"
-    );
-    
+    assert!(output.contains("src"), "Should show src directory");
+
     // Should show some files from beginning
-    assert!(
-        output.contains("file1.rs"),
-        "Should show first file"
-    );
+    assert!(output.contains("file1.rs"), "Should show first file");
 
     // Should show hidden items indicator
-    assert!(
-        output.contains("items hidden"),
-        "Should show hidden items"
-    );
+    assert!(output.contains("items hidden"), "Should show hidden items");
 
     // Line limit verification
     assert!(

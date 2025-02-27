@@ -140,11 +140,18 @@ impl<'a> DisplayState<'a> {
             self.depth
         );
 
-        let connector = if ctx.is_last { "└── " } else { "├── " };
+        let connector = if ctx.is_last {
+            "└── "
+        } else {
+            "├── "
+        };
         let mut output = format!("{}{}{}", ctx.prefix, connector, entry.name);
 
         if entry.is_gitignored && entry.is_dir {
-            output.push_str(&format!(" {} [folded: system]\n", super::utils::format_metadata(entry)));
+            output.push_str(&format!(
+                " {} [folded: system]\n",
+                super::utils::format_metadata(entry)
+            ));
         } else {
             output.push_str(&format!(" {}\n", super::utils::format_metadata(entry)));
         }
@@ -168,12 +175,17 @@ impl<'a> DisplayState<'a> {
         );
 
         if items.is_empty() || self.lines_remaining == 0 {
-            debug!("Early return: empty={}, no_lines={}", items.is_empty(), self.lines_remaining == 0);
+            debug!(
+                "Early return: empty={}, no_lines={}",
+                items.is_empty(),
+                self.lines_remaining == 0
+            );
             return;
         }
 
         let budget = self.calculate_level_budget(items.len());
-        let section = self.calculate_display_section(items.len(), budget.min(self.config.dir_limit));
+        let section =
+            self.calculate_display_section(items.len(), budget.min(self.config.dir_limit));
 
         debug!(
             "Display plan: budget={}, head={}, tail={}, hidden={}",
@@ -218,7 +230,10 @@ impl<'a> DisplayState<'a> {
 
         // Show hidden items message if needed
         if section.total_hidden > 0 && self.lines_remaining > 0 {
-            debug!("Adding hidden items indicator: {} items", section.total_hidden);
+            debug!(
+                "Adding hidden items indicator: {} items",
+                section.total_hidden
+            );
             self.output.push_str(&format!(
                 "{}├── ... {} item{} hidden ...\n",
                 prefix,

@@ -22,7 +22,7 @@ fn format_single_entry(
     entry: &DirectoryEntry,
     prefix: &str,
     is_last: bool,
-    _config: &DisplayConfig,  // Renamed to _config to avoid unused warning
+    _config: &DisplayConfig, // Renamed to _config to avoid unused warning
 ) -> String {
     let connector = if is_last { "└── " } else { "├── " };
 
