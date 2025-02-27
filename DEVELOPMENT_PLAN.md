@@ -56,7 +56,7 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
    - Implement metadata caching for frequently accessed directories
    - Consider parallel scanning for improved performance
 
-### Phase 3: UI Enhancements (Medium Term)
+### Phase 3: UI and UX Enhancements (Medium Term)
 
 1. **Terminal Integration**
    - Add terminal width consideration for improved display
@@ -72,23 +72,43 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
    - Implement icons for file types (when terminal supports it)
    - Add progress indicators for scanning large directories
    - Improve the visual hierarchy indicators
+   
+4. **Usability Improvements**
+   - Implement shorter command-line aliases (e.g., -n for --max-lines)
+   - Evaluate program name and consider alternatives (e.g., "st" for Smart Tree)
+   - Improve help messages with clearer examples and option descriptions
+   - Add bash/zsh completions for improved user experience
 
-### Phase 4: Feature Expansion (Long Term)
+### Phase 4: Distribution and Integration (Medium Term)
+
+1. **Package and Distribution**
+   - Create installation script (install.sh) for simple cross-platform installation
+   - Package for Homebrew (brew) installation on macOS
+   - Implement continuous integration/deployment pipeline
+   - Set up automated GitHub releases with versioned branches (e.g., 'v0.2.0')
+
+2. **Integration Features**
+   - VCS integration (show modified files since last commit)
+   - Build system integration for project-specific views
+   - Configuration file support for project defaults
+   - Add support for config file in multiple formats (.json, .toml)
+
+### Phase 5: Feature Expansion (Long Term)
 
 1. **Advanced Filtering**
    - Implement complex file filtering based on patterns
    - Add time-based filtering (recently modified, older than X)
    - Support regex-based content filtering
 
-2. **Integration Features**
-   - VCS integration (show modified files since last commit)
-   - Build system integration for project-specific views
-   - Configuration file support for project defaults
-
-3. **Export Capabilities**
+2. **Export Capabilities**
    - JSON/XML export of directory structure
    - HTML visualization export
    - Integration with other tools via standardized output formats
+
+3. **Advanced Integration**
+   - Add plugin system for custom extensions
+   - Implement extensions for popular development tools
+   - Add language-specific statistics gathering
 
 ## Implementation Notes
 
