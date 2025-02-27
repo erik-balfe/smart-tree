@@ -150,31 +150,35 @@ $ smart-tree --max-lines 15
 
 ## Key Features
 
-[TODO: Add section]
+- **Smart Directory Scanning**: Efficient recursive directory traversal with gitignore support
+- **Configurable Output**: Control display using max-lines, dir-limit, and sorting options
+- **Intelligent Folding**: Automatically collapses system directories like .git and node_modules
+- **Rich Metadata Display**: Shows file sizes, modification times, and directory statistics
+- **Context-Aware Output**: Maintains context by showing "X more items" summary for large folders 
+- **Multiple Sort Options**: Sort by name, size, or modification time with directory grouping
 
 ## Design Philosophy
 
 Smart Tree is built around several key principles:
 
-[TODO: Expand each principle with examples and rationales]
-
 1. **Information Density Over Completeness**
 
-   - Why showing everything isn't always helpful
-   - How we choose what to show and what to fold
+   - Showing every file in large directories rarely helps and often obscures important information
+   - Smart Tree prioritizes the most relevant files (newest, largest) while summarizing the rest
+   - System directories (.git, target, node_modules) are automatically folded to reduce noise
 
 2. **Context Preservation**
 
-   - Maintaining useful information even with strict limits
-   - Balancing between overview and details
+   - Even with strict line limits, Smart Tree maintains directory structure context
+   - When showing only a subset of files, summaries indicate what's not shown
+   - Important metadata (sizes, counts, timestamps) help maintain context even in compact views
 
-3. **Smart Defaults**
-   - Why certain system directories are auto-folded
-   - Default limits and their reasoning
+3. **Smart Defaults with Configurability**
+   - Sane defaults make the tool immediately useful without configuration
+   - Common system directories are auto-detected and folded
+   - All aspects can be customized through command-line options (sorting, line limits, directory limits)
 
 ## Technical Details
-
-[TODO: Expand each section with code examples and diagrams where appropriate]
 
 ### Architecture
 
@@ -214,39 +218,97 @@ Smart Tree is built around several key principles:
    - Metadata caching
    - Memory usage optimization
 
-### Development
+### Development Setup
 
-[TODO: Add sections about:
+To set up the project for development:
 
-- Project structure
-- Development setup
-- Testing approach
-- Common patterns used in codebase]
+```bash
+# Clone the repository
+git clone https://github.com/erik-balfe/smart-tree.git
+cd smart-tree
+
+# Build the project
+cargo build
+
+# Run tests
+cargo test
+
+# Run the binary
+cargo run -- [path] [options]
+```
+
+#### Testing Approach
+
+The project uses Rust's built-in testing framework with:
+
+- Unit tests alongside implementation code
+- Integration tests for end-to-end functionality
+- Pretty assertions for more readable test output
 
 ### Future Improvements
 
-[TODO: List planned features:
+Planned enhancements for future versions:
 
-- Additional sorting strategies
-- More metadata types]
+- **Terminal Width Consideration**: Adaptive formatting based on available terminal width
+- **Color Support**: Syntax highlighting for different file types and attributes
+- **Parallel Scanning**: Multi-threaded directory traversal for large repositories
+- **Metadata Caching**: Store and reuse file metadata for frequently accessed directories
+- **Custom Folding Rules**: User-configurable rules for auto-folding directories
+- **Interactive Mode**: Navigate the tree interactively with keyboard controls
 
-## Technical Details
+## Installation
 
-The project is organized into several key modules, each with specific responsibilities:
+```bash
+# Install from source
+git clone https://github.com/erik-balfe/smart-tree.git
+cd smart-tree
+cargo install --path .
 
-### Project Structure
+# Now you can run from anywhere
+smart-tree [path] [options]
+```
 
-```sh
+## Usage
+
+```bash
+# Basic usage - current directory
+smart-tree
+
+# Specify directory
+smart-tree /path/to/directory
+
+# Control output size
+smart-tree --max-lines 50
+
+# Sort by modification time
+smart-tree --sort-by modified
+
+# Sort by size
+smart-tree --sort-by size
+
+# Limit directory depth
+smart-tree -L 3
+
+# Show help with all options
+smart-tree --help
+```
+
+## Project Structure
+
+```
 src/
-├── display/ # Output formatting and display logic
-│ ├── mod.rs # Module interface
-│ ├── format.rs # Tree formatting implementation
-│ ├── state.rs # Display state management
-│ └── utils.rs # Formatting utilities
-├── types.rs # Core data structures
-├── scanner.rs # Directory traversal
-├── gitignore.rs # Ignore patterns handling
-└── main.rs # CLI interface
+├── display/            # Output formatting and display logic
+│   ├── mod.rs          # Module interface
+│   ├── format.rs       # Tree formatting implementation
+│   ├── state.rs        # Display state management
+│   ├── tests.rs        # Display tests
+│   └── utils.rs        # Formatting utilities
+├── gitignore.rs        # Gitignore pattern handling
+├── lib.rs              # Library interface
+├── log_macros.rs       # Logging utilities
+├── main.rs             # CLI interface
+├── scanner.rs          # Directory traversal
+└── types.rs            # Core data structures
 ```
 
 ### Core Components
@@ -309,7 +371,6 @@ src/
     - Dynamic folding based on available space
     - Context preservation in sorted output
 
-[TODO: Add sequence diagram showing display decision flow]
 
 ### Current Implementation Approaches
 
@@ -349,4 +410,3 @@ src/
     - Full directory tree kept in memory
     - Could benefit from streaming approach for very large directories
 
-[TODO: Add detailed code examples for key algorithms]
