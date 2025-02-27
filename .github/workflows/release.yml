@@ -35,6 +35,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-upload:
     name: Build and upload
@@ -83,3 +84,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
