@@ -25,14 +25,14 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
 
 ## Development Roadmap
 
-### Phase 1: Code Cleanup and Bug Fixes (Immediate Priority)
+### Phase 1: Code Cleanup and Bug Fixes (Immediate Priority) ✅
 
-1. **Fix Test Suite Errors**
+1. **Fix Test Suite Errors** ✅
    - Remove duplicated test_utils module and ExpectedContent struct
    - Fix duplicated test functions
    - Ensure tests pass with `cargo test`
 
-2. **Fix Code Quality Issues**
+2. **Fix Code Quality Issues** ✅
    - Address all compiler warnings
    - Apply consistent formatting with `cargo fmt`
    - Run clippy and fix linting issues
@@ -43,7 +43,7 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
 
 ### Phase 2: Core Functionality Enhancement (Short Term)
 
-1. **Improve GitIgnore Integration**
+1. **Improve GitIgnore Integration** ✅
    - Implement proper gitignore pattern matching
    - Support standard gitignore syntax with globs
 
