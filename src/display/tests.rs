@@ -1,5 +1,5 @@
 use super::state::DisplayState;
-use crate::types::{DirectoryEntry, DisplayConfig, EntryMetadata, SortBy};
+use crate::types::{ColorTheme, DirectoryEntry, DisplayConfig, EntryMetadata, SortBy};
 use std::path::PathBuf;
 use std::time::SystemTime;
 
@@ -59,6 +59,12 @@ fn test_basic_line_limit() {
             dir_limit: 20,
             sort_by: SortBy::Name,
             dirs_first: false,
+            use_colors: false,
+            color_theme: ColorTheme::None,
+            use_emoji: false,
+            size_colorize: false,
+            date_colorize: false,
+            detailed_metadata: false,
         };
 
         let mut state = DisplayState::new(max_lines, &config);
@@ -88,6 +94,12 @@ fn test_head_tail_pattern() {
         dir_limit: 20,
         sort_by: SortBy::Name,
         dirs_first: false,
+        use_colors: false,
+        color_theme: ColorTheme::None,
+        use_emoji: false,
+        size_colorize: false,
+        date_colorize: false,
+        detailed_metadata: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -136,6 +148,12 @@ fn test_nested_directory_budget() {
         dir_limit: 20,
         sort_by: SortBy::Name,
         dirs_first: false,
+        use_colors: false,
+        color_theme: ColorTheme::None,
+        use_emoji: false,
+        size_colorize: false,
+        date_colorize: false,
+        detailed_metadata: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -190,6 +208,12 @@ fn test_real_project_structure() {
             dir_limit: 20,
             sort_by: SortBy::Modified,
             dirs_first: false,
+            use_colors: false,
+            color_theme: ColorTheme::None,
+            use_emoji: false,
+            size_colorize: false,
+            date_colorize: false,
+            detailed_metadata: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);
@@ -319,6 +343,12 @@ fn test_expanded_project_structure() {
             dir_limit: 20,
             sort_by: SortBy::Modified,
             dirs_first: false,
+            use_colors: false,
+            color_theme: ColorTheme::None,
+            use_emoji: false,
+            size_colorize: false,
+            date_colorize: false,
+            detailed_metadata: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);
@@ -427,6 +457,12 @@ fn test_extended_head_tail_pattern() {
         dir_limit: 20,
         sort_by: SortBy::Name,
         dirs_first: false,
+        use_colors: false,
+        color_theme: ColorTheme::None,
+        use_emoji: false,
+        size_colorize: false,
+        date_colorize: false,
+        detailed_metadata: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);

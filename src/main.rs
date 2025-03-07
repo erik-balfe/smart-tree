@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use smart_tree::{format_tree, scan_directory, DisplayConfig, GitIgnore, SortBy, ColorTheme};
+use smart_tree::{format_tree, scan_directory, ColorTheme, DisplayConfig, GitIgnore, SortBy};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -29,31 +29,31 @@ struct Args {
     /// List directories before files
     #[arg(long)]
     dirs_first: bool,
-    
+
     /// Disable colored output
     #[arg(long)]
     no_color: bool,
-    
+
     /// Color theme (auto|light|dark|none)
     #[arg(long, default_value = "auto")]
     color_theme: String,
-    
+
     /// Use emoji icons for file types
     #[arg(long)]
     emoji: bool,
-    
+
     /// Disable emoji icons for file types
     #[arg(long)]
     no_emoji: bool,
-    
+
     /// Colorize file sizes based on magnitude
     #[arg(long)]
     color_sizes: bool,
-    
+
     /// Colorize dates based on recency
     #[arg(long)]
     color_dates: bool,
-    
+
     /// Display detailed metadata for files and directories
     #[arg(long)]
     detailed: bool,
