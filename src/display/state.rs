@@ -156,27 +156,40 @@ impl<'a> DisplayState<'a> {
             self.config
         );
         
-        // Get colorized name
+        // Get colorized name with optional emoji
         let name_color = if entry.is_gitignored {
             colors::get_gitignored_color(self.config)
         } else {
             colors::get_name_color(entry, self.config)
         };
         
+        // Use emoji if enabled
+        let display_name = if colors::should_use_emoji(self.config) {
+            colors::format_name_with_emoji(entry, self.config)
+        } else {
+            entry.name.clone()
+        };
+        
         let name = colors::colorize_styled(
-            &entry.name,
+            &display_name,
             name_color,
             entry.is_dir, // Bold directories
             self.config
         );
         
-        // Format metadata with colors
-        let metadata = super::utils::format_metadata(entry);
-        let colorized_metadata = colors::colorize(
-            &metadata,
-            colors::get_metadata_color(self.config),
-            self.config
-        );
+        // Format metadata with enhanced colors
+        let colorized_metadata = if self.config.detailed_metadata {
+            super::utils::format_detailed_metadata(entry, self.config)
+        } else if self.config.size_colorize || self.config.date_colorize {
+            super::utils::format_colorized_metadata(entry, self.config)
+        } else {
+            let metadata = super::utils::format_metadata(entry);
+            colors::colorize(
+                &metadata,
+                colors::get_metadata_color(self.config),
+                self.config
+            )
+        };
         
         // Combine parts into output
         let mut output = format!("{}{}{}", colorized_prefix, connector, name);

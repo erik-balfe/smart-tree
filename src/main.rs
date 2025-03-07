@@ -37,6 +37,26 @@ struct Args {
     /// Color theme (auto|light|dark|none)
     #[arg(long, default_value = "auto")]
     color_theme: String,
+    
+    /// Use emoji icons for file types
+    #[arg(long)]
+    emoji: bool,
+    
+    /// Disable emoji icons for file types
+    #[arg(long)]
+    no_emoji: bool,
+    
+    /// Colorize file sizes based on magnitude
+    #[arg(long)]
+    color_sizes: bool,
+    
+    /// Colorize dates based on recency
+    #[arg(long)]
+    color_dates: bool,
+    
+    /// Display detailed metadata for files and directories
+    #[arg(long)]
+    detailed: bool,
 }
 
 fn init_logger() {
@@ -57,6 +77,13 @@ fn main() -> Result<()> {
     init_logger();
     let args = Args::parse();
 
+    // Determine if we should use emoji (default to true unless --no-emoji is specified)
+    let use_emoji = if args.no_emoji {
+        false
+    } else {
+        args.emoji || !args.no_emoji
+    };
+
     let config = DisplayConfig {
         max_lines: args.max_lines,
         dir_limit: args.dir_limit,
@@ -74,6 +101,10 @@ fn main() -> Result<()> {
             "none" => ColorTheme::None,
             _ => ColorTheme::Auto,
         },
+        use_emoji,
+        size_colorize: args.color_sizes,
+        date_colorize: args.color_dates,
+        detailed_metadata: args.detailed,
     };
 
     let gitignore = GitIgnore::load(&args.path)?;
