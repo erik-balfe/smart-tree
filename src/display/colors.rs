@@ -272,6 +272,33 @@ pub(super) fn get_hidden_items_color(config: &DisplayConfig) -> Color {
     }
 }
 
+/// Get color for metadata labels (size:, files:, etc.)
+pub(super) fn get_label_color(config: &DisplayConfig) -> Color {
+    match config.color_theme {
+        ColorTheme::Light => Color::Blue,
+        ColorTheme::Dark => Color::Cyan,
+        _ => Color::Cyan,
+    }
+}
+
+/// Get color for metadata values
+pub(super) fn get_value_color(config: &DisplayConfig) -> Color {
+    match config.color_theme {
+        ColorTheme::Light => Color::Green,
+        ColorTheme::Dark => Color::BrightGreen,
+        _ => Color::BrightGreen,
+    }
+}
+
+/// Get color for separators between metadata sections
+pub(super) fn get_separator_color(config: &DisplayConfig) -> Color {
+    match config.color_theme {
+        ColorTheme::Light => Color::Magenta,
+        ColorTheme::Dark => Color::BrightMagenta,
+        _ => Color::BrightMagenta,
+    }
+}
+
 /// Colorize a string if colors are enabled, otherwise return it as-is
 pub(super) fn colorize(text: &str, color: Color, config: &DisplayConfig) -> String {
     if should_use_colors(config) {

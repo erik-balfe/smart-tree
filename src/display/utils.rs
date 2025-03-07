@@ -28,6 +28,8 @@ pub(super) fn format_file_metadata(entry: &DirectoryEntry) -> String {
     format!("({}, modified {})", size, modified)
 }
 
+// Removed unused traditional_metadata function
+
 pub(super) fn format_colorized_metadata(entry: &DirectoryEntry, config: &DisplayConfig) -> String {
     if !colors::should_use_colors(config) {
         return format_metadata(entry);
@@ -44,85 +46,108 @@ pub(super) fn format_colorized_metadata(entry: &DirectoryEntry, config: &Display
         .as_secs();
     let time_diff = now.saturating_sub(modified_secs);
     
+    // Define separators
+    let separator = colors::colorize(" | ", colors::get_separator_color(config), config);
+    
     if entry.is_dir {
-        let files_text = format!("{} files", entry.metadata.files_count);
-        let files_colored = if config.size_colorize {
+        // Format files count
+        let files_label = colors::colorize("files: ", colors::get_label_color(config), config);
+        let files_value = if config.size_colorize {
             colors::colorize(
-                &files_text,
+                &format!("{}", entry.metadata.files_count),
                 colors::get_size_color(entry.metadata.size, config),
                 config
             )
         } else {
             colors::colorize(
-                &files_text,
-                colors::get_metadata_color(config),
+                &format!("{}", entry.metadata.files_count),
+                colors::get_value_color(config),
                 config
             )
         };
+        let files_section = format!("{}{}", files_label, files_value);
         
-        let size_text = format_size(entry.metadata.size);
-        let size_colored = if config.size_colorize {
+        // Format size
+        let size_label = colors::colorize("size: ", colors::get_label_color(config), config);
+        let size_value = if config.size_colorize {
             colors::colorize(
-                &size_text,
+                &format_size(entry.metadata.size),
                 colors::get_size_color(entry.metadata.size, config),
                 config
             )
         } else {
             colors::colorize(
-                &size_text,
-                colors::get_metadata_color(config),
+                &format_size(entry.metadata.size),
+                colors::get_value_color(config),
                 config
             )
         };
+        let size_section = format!("{}{}", size_label, size_value);
         
-        let date_text = format!("modified {}", format_time(entry.metadata.modified));
-        let date_colored = if config.date_colorize {
+        // Format date
+        let date_label = colors::colorize("mod: ", colors::get_label_color(config), config);
+        let date_value = if config.date_colorize {
             colors::colorize(
-                &date_text,
+                &format_time(entry.metadata.modified),
                 colors::get_date_color(time_diff, config),
                 config
             )
         } else {
             colors::colorize(
-                &date_text,
-                colors::get_metadata_color(config),
+                &format_time(entry.metadata.modified),
+                colors::get_value_color(config),
                 config
             )
         };
+        let date_section = format!("{}{}", date_label, date_value);
         
-        format!("({}, {}, {})", files_colored, size_colored, date_colored)
+        format!("({}{}{}{}{})", 
+            files_section, 
+            separator, 
+            size_section, 
+            separator, 
+            date_section
+        )
     } else {
-        let size_text = format_size(entry.metadata.size);
-        let size_colored = if config.size_colorize {
+        // Format size
+        let size_label = colors::colorize("size: ", colors::get_label_color(config), config);
+        let size_value = if config.size_colorize {
             colors::colorize(
-                &size_text,
+                &format_size(entry.metadata.size),
                 colors::get_size_color(entry.metadata.size, config),
                 config
             )
         } else {
             colors::colorize(
-                &size_text,
-                colors::get_metadata_color(config),
+                &format_size(entry.metadata.size),
+                colors::get_value_color(config),
                 config
             )
         };
+        let size_section = format!("{}{}", size_label, size_value);
         
-        let date_text = format!("modified {}", format_time(entry.metadata.modified));
-        let date_colored = if config.date_colorize {
+        // Format date
+        let date_label = colors::colorize("mod: ", colors::get_label_color(config), config);
+        let date_value = if config.date_colorize {
             colors::colorize(
-                &date_text,
+                &format_time(entry.metadata.modified),
                 colors::get_date_color(time_diff, config),
                 config
             )
         } else {
             colors::colorize(
-                &date_text,
-                colors::get_metadata_color(config),
+                &format_time(entry.metadata.modified),
+                colors::get_value_color(config),
                 config
             )
         };
+        let date_section = format!("{}{}", date_label, date_value);
         
-        format!("({}, {})", size_colored, date_colored)
+        format!("({}{}{})", 
+            size_section, 
+            separator, 
+            date_section
+        )
     }
 }
 
@@ -151,80 +176,111 @@ pub(super) fn format_detailed_metadata(entry: &DirectoryEntry, config: &DisplayC
     let file_type = colors::determine_file_type(entry);
     let type_str = format!("{:?}", file_type);
     
-    // Start building parts
-    let mut parts = Vec::new();
+    // Define separators
+    let separator = colors::colorize(" | ", colors::get_separator_color(config), config);
     
-    // Size info
-    let size_text = format_size(entry.metadata.size);
-    let size_colored = if config.size_colorize {
+    // Build sections
+    
+    // Size section
+    let size_label = colors::colorize("size: ", colors::get_label_color(config), config);
+    let size_value = if config.size_colorize {
         colors::colorize(
-            &size_text,
+            &format_size(entry.metadata.size),
             colors::get_size_color(entry.metadata.size, config),
             config
         )
     } else {
         colors::colorize(
-            &size_text,
-            colors::get_metadata_color(config),
+            &format_size(entry.metadata.size),
+            colors::get_value_color(config),
             config
         )
     };
-    parts.push(size_colored);
+    let size_section = format!("{}{}", size_label, size_value);
     
-    // Type info
-    let type_colored = colors::colorize(
+    // Type section
+    let type_label = colors::colorize("type: ", colors::get_label_color(config), config);
+    let type_value = colors::colorize(
         &type_str,
         colors::get_name_color(entry, config),
         config
     );
-    parts.push(type_colored);
+    let type_section = format!("{}{}", type_label, type_value);
     
-    // Date info - modified
-    let modified_text = format!("mod: {}", format_time(entry.metadata.modified));
-    let modified_colored = if config.date_colorize {
+    // Modified date section
+    let mod_label = colors::colorize("mod: ", colors::get_label_color(config), config);
+    let mod_value = if config.date_colorize {
         colors::colorize(
-            &modified_text,
+            &format_time(entry.metadata.modified),
             colors::get_date_color(time_diff, config),
             config
         )
     } else {
         colors::colorize(
-            &modified_text,
-            colors::get_metadata_color(config),
+            &format_time(entry.metadata.modified),
+            colors::get_value_color(config),
             config
         )
     };
-    parts.push(modified_colored);
+    let mod_section = format!("{}{}", mod_label, mod_value);
     
-    // Date info - created
-    let created_text = format!("created: {}", format_time(entry.metadata.created));
-    let created_colored = if config.date_colorize {
+    // Created date section
+    let created_label = colors::colorize("created: ", colors::get_label_color(config), config);
+    let created_value = if config.date_colorize {
         colors::colorize(
-            &created_text,
+            &format_time(entry.metadata.created),
             colors::get_date_color(created_diff, config),
             config
         )
     } else {
         colors::colorize(
-            &created_text,
-            colors::get_metadata_color(config),
+            &format_time(entry.metadata.created),
+            colors::get_value_color(config),
             config
         )
     };
-    parts.push(created_colored);
+    let created_section = format!("{}{}", created_label, created_value);
     
-    // Add files count for directories
+    // For directories, add files count section
     if entry.is_dir {
-        let files_text = format!("{} files", entry.metadata.files_count);
-        let files_colored = colors::colorize(
-            &files_text,
-            colors::get_metadata_color(config),
-            config
-        );
-        parts.push(files_colored);
+        let files_label = colors::colorize("files: ", colors::get_label_color(config), config);
+        let files_value = if config.size_colorize {
+            colors::colorize(
+                &format!("{}", entry.metadata.files_count),
+                colors::get_size_color(entry.metadata.size, config),
+                config
+            )
+        } else {
+            colors::colorize(
+                &format!("{}", entry.metadata.files_count),
+                colors::get_value_color(config),
+                config
+            )
+        };
+        let files_section = format!("{}{}", files_label, files_value);
+        
+        format!("({}{}{}{}{}{}{}{}{})", 
+            size_section, 
+            separator, 
+            type_section,
+            separator,
+            mod_section,
+            separator,
+            created_section,
+            separator,
+            files_section
+        )
+    } else {
+        format!("({}{}{}{}{}{}{})", 
+            size_section, 
+            separator, 
+            type_section,
+            separator,
+            mod_section,
+            separator,
+            created_section
+        )
     }
-    
-    format!("({})", parts.join(", "))
 }
 
 pub(super) fn format_size(size: u64) -> String {

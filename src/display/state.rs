@@ -180,15 +180,8 @@ impl<'a> DisplayState<'a> {
         // Format metadata with enhanced colors
         let colorized_metadata = if self.config.detailed_metadata {
             super::utils::format_detailed_metadata(entry, self.config)
-        } else if self.config.size_colorize || self.config.date_colorize {
-            super::utils::format_colorized_metadata(entry, self.config)
         } else {
-            let metadata = super::utils::format_metadata(entry);
-            colors::colorize(
-                &metadata,
-                colors::get_metadata_color(self.config),
-                self.config
-            )
+            super::utils::format_colorized_metadata(entry, self.config)
         };
         
         // Combine parts into output
