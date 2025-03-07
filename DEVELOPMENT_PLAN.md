@@ -70,14 +70,17 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
    - Add interactive navigation features
 
 2. **Advanced Display Options**
-   - Implement customizable display templates
-   - Add file type recognition and specialized displays
-   - Support different view modes (compact, detailed)
+   - ✅ Implement customizable display templates
+   - ✅ Add file type recognition and specialized displays
+   - ✅ Support different view modes (compact, detailed)
+     - ✅ Add detailed metadata display option
+     - ✅ Add size-based color gradients
+     - ✅ Add date-based color gradients
 
 3. **Visual Enhancements**
-   - Implement icons for file types (when terminal supports it)
+   - ✅ Implement icons for file types (emoji support)
    - Add progress indicators for scanning large directories
-   - Improve the visual hierarchy indicators
+   - ✅ Improve the visual hierarchy indicators
    
 4. **Usability Improvements**
    - Implement shorter command-line aliases (e.g., -n for --max-lines)
