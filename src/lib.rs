@@ -10,4 +10,4 @@ mod types;
 pub use display::{format_tree, should_use_colors};
 pub use gitignore::GitIgnore;
 pub use scanner::scan_directory;
-pub use types::{DirectoryEntry, DisplayConfig, EntryMetadata, SortBy, ColorTheme};
+pub use types::{ColorTheme, DirectoryEntry, DisplayConfig, EntryMetadata, SortBy};

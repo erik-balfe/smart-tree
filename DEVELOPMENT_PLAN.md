@@ -17,8 +17,7 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
 
 ### Known Issues
 
-- Tests have duplicated code in `display/tests.rs` that prevents compilation
-- Gitignore pattern matching is overly simplified
+- Gitignore pattern matching could be further improved
 - Performance concerns for large directory structures
 - Full directory tree kept in memory (could be problematic for large trees)
 - Limited terminal width consideration
