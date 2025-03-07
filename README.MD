@@ -41,15 +41,34 @@ Smart Tree takes a different approach:
    - When sorting by date, shows both newest AND oldest files
    - Ensures you see the most relevant files within the limit
 
-3. **Rich Metadata**
+3. **Rich Metadata and Visualization**
 
    - File sizes in human-readable format
    - Modification times in relative format ("5m ago", "2h ago")
    - Directory statistics (file counts, total sizes)
+   - Color-coded file types (directories, code, images, etc.)
+   - Emoji icons for different file types
+   - Size-based color gradients for quick visual assessment
+   - Detailed metadata view with file type information
 
 ## Usage Examples
 
 Smart Tree helps in different scenarios where traditional tree command becomes impractical. Here are some common use cases:
+
+### Enhanced Visual Display
+
+Smart Tree offers rich visualization options to make browsing directories more intuitive:
+
+```bash
+# Use emoji icons and colored metadata
+$ smart-tree --emoji --color-sizes --color-dates
+
+# Detailed view with file type information and enhanced formatting
+$ smart-tree --detailed --emoji
+
+# Choose between light and dark theme
+$ smart-tree --color-theme dark --emoji
+```
 
 ### Finding Recent Changes
 
