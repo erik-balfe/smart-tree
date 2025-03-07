@@ -1,5 +1,6 @@
 use crate::types::{DirectoryEntry, DisplayConfig};
 use log::{debug, info, trace};
+use super::colors;
 
 #[derive(Debug)]
 struct DisplaySection {
@@ -140,20 +141,55 @@ impl<'a> DisplayState<'a> {
             self.depth
         );
 
-        let connector = if ctx.is_last {
-            "└── "
+        // Get colorized connector
+        let connector_str = if ctx.is_last { colors::TREE_CORNER } else { colors::TREE_BRANCH };
+        let connector = colors::colorize(
+            connector_str, 
+            colors::get_connector_color(self.config),
+            self.config
+        );
+        
+        // Get colorized prefix (tree lines)
+        let colorized_prefix = colors::colorize(
+            &ctx.prefix, 
+            colors::get_connector_color(self.config),
+            self.config
+        );
+        
+        // Get colorized name
+        let name_color = if entry.is_gitignored {
+            colors::get_gitignored_color(self.config)
         } else {
-            "├── "
+            colors::get_name_color(entry, self.config)
         };
-        let mut output = format!("{}{}{}", ctx.prefix, connector, entry.name);
-
+        
+        let name = colors::colorize_styled(
+            &entry.name,
+            name_color,
+            entry.is_dir, // Bold directories
+            self.config
+        );
+        
+        // Format metadata with colors
+        let metadata = super::utils::format_metadata(entry);
+        let colorized_metadata = colors::colorize(
+            &metadata,
+            colors::get_metadata_color(self.config),
+            self.config
+        );
+        
+        // Combine parts into output
+        let mut output = format!("{}{}{}", colorized_prefix, connector, name);
+        
         if entry.is_gitignored && entry.is_dir {
-            output.push_str(&format!(
-                " {} [folded: system]\n",
-                super::utils::format_metadata(entry)
-            ));
+            let folded_text = colors::colorize(
+                " [folded: system]",
+                colors::get_gitignored_color(self.config),
+                self.config
+            );
+            output.push_str(&format!(" {}{}\n", colorized_metadata, folded_text));
         } else {
-            output.push_str(&format!(" {}\n", super::utils::format_metadata(entry)));
+            output.push_str(&format!(" {}\n", colorized_metadata));
         }
 
         trace!("Formatted output: {}", output.trim());
@@ -223,7 +259,7 @@ impl<'a> DisplayState<'a> {
 
             if item.is_dir && !item.is_gitignored && self.lines_remaining > 0 {
                 debug!("Processing directory: {}", item.name);
-                let new_prefix = format!("{}{}", prefix, if is_last { "    " } else { "│   " });
+                let new_prefix = format!("{}{}", prefix, if is_last { colors::TREE_SPACE } else { colors::TREE_VERTICAL });
                 self.show_items(&item.children, &new_prefix);
             }
         }
@@ -234,11 +270,35 @@ impl<'a> DisplayState<'a> {
                 "Adding hidden items indicator: {} items",
                 section.total_hidden
             );
+            
+            // Colorize the hidden items message
+            let connector = colors::colorize(
+                colors::TREE_BRANCH, 
+                colors::get_connector_color(self.config),
+                self.config
+            );
+            
+            let hidden_prefix = colors::colorize(
+                prefix, 
+                colors::get_connector_color(self.config),
+                self.config
+            );
+            
+            let hidden_text = colors::colorize(
+                &format!(
+                    "... {} item{} hidden ...",
+                    section.total_hidden,
+                    if section.total_hidden == 1 { "" } else { "s" }
+                ),
+                colors::get_hidden_items_color(self.config),
+                self.config
+            );
+            
             self.output.push_str(&format!(
-                "{}├── ... {} item{} hidden ...\n",
-                prefix,
-                section.total_hidden,
-                if section.total_hidden == 1 { "" } else { "s" }
+                "{}{}{}\n",
+                hidden_prefix,
+                connector,
+                hidden_text
             ));
             self.lines_remaining -= 1;
         }

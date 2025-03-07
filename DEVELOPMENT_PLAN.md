@@ -60,7 +60,13 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
 
 1. **Terminal Integration**
    - Add terminal width consideration for improved display
-   - Implement color support for different file types and metadata
+   - ✅ Implement color support for different file types and metadata
+     - ✅ Use different colors for directories, files, symlinks
+     - ✅ Highlight gitignored entries in a distinct color
+     - ✅ Color code metadata based on file type and size
+     - ✅ Add config option to enable/disable colors
+     - ✅ Support for light/dark themes
+     - ✅ Fix tree connector characters for consistent rendering
    - Add interactive navigation features
 
 2. **Advanced Display Options**

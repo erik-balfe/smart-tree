@@ -26,6 +26,16 @@ pub struct DisplayConfig {
     pub dir_limit: usize,
     pub sort_by: SortBy,
     pub dirs_first: bool,
+    pub use_colors: bool,
+    pub color_theme: ColorTheme,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ColorTheme {
+    Auto,
+    Light,
+    Dark,
+    None,
 }
 
 #[derive(Debug, Clone, PartialEq)]

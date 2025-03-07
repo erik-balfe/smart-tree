@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use smart_tree::{format_tree, scan_directory, DisplayConfig, GitIgnore, SortBy};
+use smart_tree::{format_tree, scan_directory, DisplayConfig, GitIgnore, SortBy, ColorTheme};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -29,6 +29,14 @@ struct Args {
     /// List directories before files
     #[arg(long)]
     dirs_first: bool,
+    
+    /// Disable colored output
+    #[arg(long)]
+    no_color: bool,
+    
+    /// Color theme (auto|light|dark|none)
+    #[arg(long, default_value = "auto")]
+    color_theme: String,
 }
 
 fn init_logger() {
@@ -59,6 +67,13 @@ fn main() -> Result<()> {
             _ => SortBy::Name,
         },
         dirs_first: args.dirs_first,
+        use_colors: !args.no_color,
+        color_theme: match args.color_theme.to_lowercase().as_str() {
+            "light" => ColorTheme::Light,
+            "dark" => ColorTheme::Dark,
+            "none" => ColorTheme::None,
+            _ => ColorTheme::Auto,
+        },
     };
 
     let gitignore = GitIgnore::load(&args.path)?;
