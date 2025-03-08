@@ -191,13 +191,25 @@ impl<'a> DisplayState<'a> {
         // Combine parts into output
         let mut output = format!("{}{}{}", colorized_prefix, connector, name);
 
+        // Show system directory indicator for gitignored directories
         if entry.is_gitignored && entry.is_dir {
-            let folded_text = colors::colorize(
-                " [folded: system]",
-                colors::get_gitignored_color(self.config),
-                self.config,
-            );
-            output.push_str(&format!(" {}{}\n", colorized_metadata, folded_text));
+            // If we're showing system directories, show a subtle indicator but still expand
+            if self.config.show_system_dirs {
+                let system_dir_text = colors::colorize(
+                    " [system]",
+                    colors::get_gitignored_color(self.config),
+                    self.config,
+                );
+                output.push_str(&format!(" {}{}\n", colorized_metadata, system_dir_text));
+            } else {
+                // Traditional folded indicator when not showing system directories
+                let folded_text = colors::colorize(
+                    " [folded: system]",
+                    colors::get_gitignored_color(self.config),
+                    self.config,
+                );
+                output.push_str(&format!(" {}{}\n", colorized_metadata, folded_text));
+            }
         } else {
             output.push_str(&format!(" {}\n", colorized_metadata));
         }
@@ -273,7 +285,11 @@ impl<'a> DisplayState<'a> {
             self.output.push_str(&entry_line);
             self.lines_remaining -= 1;
 
-            if item.is_dir && !item.is_gitignored && self.lines_remaining > 0 {
+            // Process directories if:
+            // 1. We have lines remaining AND
+            // 2. Either it's not gitignored OR we explicitly want to show system dirs
+            if item.is_dir && self.lines_remaining > 0 && 
+               (!item.is_gitignored || self.config.show_system_dirs) {
                 debug!("Processing directory: {}", item.name);
                 let new_prefix = format!(
                     "{}{}",
@@ -350,7 +366,11 @@ impl<'a> DisplayState<'a> {
                 self.output.push_str(&entry_line);
                 self.lines_remaining -= 1;
 
-                if item.is_dir && !item.is_gitignored && self.lines_remaining > 0 {
+                // Process directories if:
+                // 1. We have lines remaining AND
+                // 2. Either it's not gitignored OR we explicitly want to show system dirs
+                if item.is_dir && self.lines_remaining > 0 && 
+                   (!item.is_gitignored || self.config.show_system_dirs) {
                     debug!("Processing directory: {}", item.name);
                     // Use the tree spaces and vertical constants for consistency
                     let new_prefix = format!(

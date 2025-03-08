@@ -32,6 +32,7 @@ pub struct DisplayConfig {
     pub size_colorize: bool,     // Whether to colorize sizes by value
     pub date_colorize: bool,     // Whether to colorize dates by recency
     pub detailed_metadata: bool, // Whether to show detailed metadata
+    pub show_system_dirs: bool,  // Whether to show system directories like .git
 }
 
 #[derive(Debug, Clone, PartialEq)]

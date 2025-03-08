@@ -9,7 +9,10 @@ pub fn scan_directory(
     root: &Path,
     gitignore: &GitIgnore,
     max_depth: usize,
+    show_system_dirs: Option<bool>,
 ) -> Result<DirectoryEntry> {
+    // Default to not showing system directories if not specified
+    let show_system = show_system_dirs.unwrap_or(false);
     let root_metadata = fs::metadata(root)?;
     let root_name = root
         .file_name()
@@ -49,9 +52,9 @@ pub fn scan_directory(
         is_gitignored: gitignore.is_ignored(root),
     };
 
-    // For gitignored directories, provide basic metadata without deep traversal
-    if root_entry.is_gitignored {
-        // Do a quick scan to get file counts without going deep
+    // For gitignored directories, decide whether to traverse or just provide basic metadata
+    if root_entry.is_gitignored && !show_system {
+        // If not showing system directories, do a quick scan to get file counts without deep traversal
         let mut file_count = 0;
         let mut total_size = 0;
 
@@ -81,6 +84,7 @@ pub fn scan_directory(
 
         return Ok(root_entry);
     }
+    // If we're showing system directories, we'll continue with the normal traversal
 
     let mut entries = Vec::new();
 
@@ -95,7 +99,7 @@ pub fn scan_directory(
         if metadata.is_dir() {
             // Recursively scan subdirectories if depth allows
             if max_depth > 1 {
-                match scan_directory(&path, gitignore, max_depth - 1) {
+                match scan_directory(&path, gitignore, max_depth - 1, Some(show_system)) {
                     Ok(dir_entry) => {
                         // Update parent metadata
                         root_entry.metadata.files_count += dir_entry.metadata.files_count;

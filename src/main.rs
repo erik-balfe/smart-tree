@@ -57,6 +57,10 @@ struct Args {
     /// Display detailed metadata for files and directories
     #[arg(long)]
     detailed: bool,
+    
+    /// Show system directories like .git, node_modules, etc.
+    #[arg(long)]
+    show_system_dirs: bool,
 }
 
 fn init_logger() {
@@ -105,10 +109,11 @@ fn main() -> Result<()> {
         size_colorize: args.color_sizes,
         date_colorize: args.color_dates,
         detailed_metadata: args.detailed,
+        show_system_dirs: args.show_system_dirs,
     };
 
     let gitignore = GitIgnore::load(&args.path)?;
-    let root = scan_directory(&args.path, &gitignore, args.max_depth)?;
+    let root = scan_directory(&args.path, &gitignore, args.max_depth, Some(config.show_system_dirs))?;
     let output = format_tree(&root, &config)?;
 
     println!("{}", output);
