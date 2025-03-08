@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use smart_tree::{format_tree, scan_directory, ColorTheme, DisplayConfig, GitIgnore, SortBy};
+use smart_tree::{format_tree, scan_directory, ColorTheme, DisplayConfig, GitIgnoreContext, SortBy};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -58,9 +58,13 @@ struct Args {
     #[arg(long)]
     detailed: bool,
     
-    /// Show system directories like .git, node_modules, etc.
+    /// Show system directories like .git, node_modules, target, etc.
     #[arg(long)]
     show_system_dirs: bool,
+    
+    /// Ignore .gitignore files when scanning
+    #[arg(long)]
+    no_gitignore: bool,
 }
 
 fn init_logger() {
@@ -112,10 +116,25 @@ fn main() -> Result<()> {
         show_system_dirs: args.show_system_dirs,
     };
 
-    let gitignore = GitIgnore::load(&args.path)?;
-    let root = scan_directory(&args.path, &gitignore, args.max_depth, Some(config.show_system_dirs))?;
+    // Initialize the GitIgnoreContext
+    let mut gitignore_ctx = if args.no_gitignore {
+        // Create an empty context if gitignore is disabled
+        GitIgnoreContext::new(&args.path)?
+    } else {
+        GitIgnoreContext::new(&args.path)?
+    };
+    
+    // Scan the directory tree
+    let root = scan_directory(
+        &args.path, 
+        &mut gitignore_ctx, 
+        args.max_depth, 
+        Some(config.show_system_dirs)
+    )?;
+    
+    // Format and print the tree
     let output = format_tree(&root, &config)?;
-
     println!("{}", output);
+    
     Ok(())
 }

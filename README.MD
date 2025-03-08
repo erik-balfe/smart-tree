@@ -51,12 +51,15 @@ $ smart-tree
 
 ## 🔍 Key Features
 
+- **Intelligent filtering** - Smart, context-aware decisions about what to show based on project type
 - **Immediately spot what matters** - Recent changes and important files stand out
-- **No visual clutter** - Automatically collapses system directories like `.git` and `node_modules`
+- **Project-aware** - Understands different project types (Rust, JavaScript, Python, etc.)
+- **No visual clutter** - Automatically filters system directories like `.git` and `node_modules`
 - **Rich context** - File sizes, modification times, and directory statistics
 - **Beautiful visualization** - Color-coded file types and emoji icons
 - **Lightning fast** - Navigates even massive repositories with ease
 - **Auto-adapts** - Works within your terminal's capacity while preserving critical information
+- **Extensible** - Add your own custom filtering rules via configuration
 
 ## 💡 The Perfect Tool For...
 
@@ -132,6 +135,15 @@ smart-tree --sort-by size
 # Limit directory depth
 smart-tree -L 3
 
+# Show system directories (like .git, node_modules, etc.)
+smart-tree --show-system-dirs
+
+# Customize filtering rules
+smart-tree --disable-rule vcs --disable-rule build_output
+
+# List all available rules
+smart-tree --list-rules
+
 # Show help with all options
 smart-tree --help
 ```
@@ -162,9 +174,11 @@ We welcome contributions to Smart Tree! See [CONTRIBUTING.md](CONTRIBUTING.md) f
 
 Smart Tree follows these key principles:
 
-1. **Information Density Over Completeness** - Shows relevant files while summarizing the rest
-2. **Context Preservation** - Maintains directory structure context even with strict line limits
-3. **Smart Defaults with Configurability** - Works well out of the box but can be customized
+1. **Contextual Intelligence** - Understands your project's structure to show what's relevant in that context
+2. **Information Density Over Completeness** - Shows relevant files while summarizing the rest  
+3. **Context Preservation** - Maintains directory structure context even with strict line limits
+4. **Smart Defaults with Configurability** - Works well out of the box but can be customized
+5. **Rule-Based Filtering** - Uses an extensible system of rules to make informed display decisions
 
 ## 📋 Technical Details
 

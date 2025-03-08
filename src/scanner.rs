@@ -1,13 +1,13 @@
-use crate::gitignore::GitIgnore;
+use crate::gitignore::GitIgnoreContext;
 use crate::types::{DirectoryEntry, EntryMetadata};
 use anyhow::Result;
-// VecDeque no longer needed as we've switched to a recursive approach
+use log::{debug, warn};
 use std::fs;
 use std::path::Path;
 
 pub fn scan_directory(
     root: &Path,
-    gitignore: &GitIgnore,
+    gitignore_ctx: &mut GitIgnoreContext,
     max_depth: usize,
     show_system_dirs: Option<bool>,
 ) -> Result<DirectoryEntry> {
@@ -18,6 +18,11 @@ pub fn scan_directory(
         .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_else(|| root.to_string_lossy().to_string());
+
+    // Process this directory to load any .gitignore file before checking ignore status
+    if let Err(e) = gitignore_ctx.process_directory(root) {
+        warn!("Error processing gitignore in {}: {}", root.display(), e);
+    }
 
     // Early return for non-directories or when max_depth is 0
     if !root_metadata.is_dir() || max_depth == 0 {
@@ -32,7 +37,7 @@ pub fn scan_directory(
                 files_count: 0,
             },
             children: Vec::new(),
-            is_gitignored: gitignore.is_ignored(root),
+            is_gitignored: gitignore_ctx.is_ignored(root),
         });
     }
 
@@ -49,11 +54,12 @@ pub fn scan_directory(
             files_count: 0,
         },
         children: Vec::new(),
-        is_gitignored: gitignore.is_ignored(root),
+        is_gitignored: gitignore_ctx.is_ignored(root),
     };
 
     // For gitignored directories, decide whether to traverse or just provide basic metadata
     if root_entry.is_gitignored && !show_system {
+        debug!("Skipping deep traversal of system directory: {}", root.display());
         // If not showing system directories, do a quick scan to get file counts without deep traversal
         let mut file_count = 0;
         let mut total_size = 0;
@@ -94,12 +100,14 @@ pub fn scan_directory(
         let path = dir_entry.path();
         let metadata = dir_entry.metadata()?;
         let name = dir_entry.file_name().to_string_lossy().to_string();
-        let is_gitignored = gitignore.is_ignored(&path);
+        
+        // Check if this specific entry is gitignored
+        let is_gitignored = gitignore_ctx.is_ignored(&path);
 
         if metadata.is_dir() {
             // Recursively scan subdirectories if depth allows
             if max_depth > 1 {
-                match scan_directory(&path, gitignore, max_depth - 1, Some(show_system)) {
+                match scan_directory(&path, gitignore_ctx, max_depth - 1, Some(show_system)) {
                     Ok(dir_entry) => {
                         // Update parent metadata
                         root_entry.metadata.files_count += dir_entry.metadata.files_count;
@@ -107,7 +115,7 @@ pub fn scan_directory(
                         entries.push(dir_entry);
                     }
                     Err(e) => {
-                        log::warn!("Error scanning directory {}: {}", path.display(), e);
+                        warn!("Error scanning directory {}: {}", path.display(), e);
                     }
                 }
             } else {

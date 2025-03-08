@@ -65,6 +65,7 @@ fn test_basic_line_limit() {
             size_colorize: false,
             date_colorize: false,
             detailed_metadata: false,
+        show_system_dirs: false,
         };
 
         let mut state = DisplayState::new(max_lines, &config);
@@ -100,6 +101,7 @@ fn test_head_tail_pattern() {
         size_colorize: false,
         date_colorize: false,
         detailed_metadata: false,
+        show_system_dirs: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -154,6 +156,7 @@ fn test_nested_directory_budget() {
         size_colorize: false,
         date_colorize: false,
         detailed_metadata: false,
+        show_system_dirs: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -214,6 +217,7 @@ fn test_real_project_structure() {
             size_colorize: false,
             date_colorize: false,
             detailed_metadata: false,
+        show_system_dirs: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);
@@ -349,6 +353,7 @@ fn test_expanded_project_structure() {
             size_colorize: false,
             date_colorize: false,
             detailed_metadata: false,
+        show_system_dirs: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);
@@ -463,6 +468,7 @@ fn test_extended_head_tail_pattern() {
         size_colorize: false,
         date_colorize: false,
         detailed_metadata: false,
+        show_system_dirs: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -517,6 +523,7 @@ fn test_last_item_connector() {
         size_colorize: false,
         date_colorize: false,
         detailed_metadata: false,
+        show_system_dirs: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -567,6 +574,7 @@ fn test_no_collapse_single_item() {
         size_colorize: false,
         date_colorize: false,
         detailed_metadata: false,
+        show_system_dirs: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -602,6 +610,7 @@ fn test_no_collapse_single_item() {
         size_colorize: false,
         date_colorize: false,
         detailed_metadata: false,
+        show_system_dirs: false,
     };
 
     let mut more_state = DisplayState::new(more_config.max_lines, &more_config);

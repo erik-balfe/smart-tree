@@ -141,7 +141,7 @@ impl TestFileBuilder {
 mod integration_tests {
     use super::*;
     use crate::gitignore::GitIgnore;
-    use crate::scanner::scan_directory;
+    use crate::scan_directory_with_legacy_gitignore;
     use crate::types::{DisplayConfig, SortBy, ColorTheme};
     use crate::format_tree;
 
@@ -154,7 +154,7 @@ mod integration_tests {
         let root_path = builder.root_path();
         let gitignore = GitIgnore::load(root_path).unwrap();
         
-        let root = scan_directory(root_path, &gitignore, usize::MAX, None).unwrap();
+        let root = scan_directory_with_legacy_gitignore(root_path, &gitignore, usize::MAX, None).unwrap();
         
         // Find .git directory in the scanned result
         let git_dir = root.children.iter()
@@ -205,7 +205,7 @@ mod integration_tests {
         
         let root_path = builder.root_path().join("test_dir");
         let gitignore = GitIgnore::load(&root_path).unwrap();
-        let root = scan_directory(&root_path, &gitignore, usize::MAX, None).unwrap();
+        let root = scan_directory_with_legacy_gitignore(&root_path, &gitignore, usize::MAX, None).unwrap();
         
         // Configure to only show 2 items in directory (2 lines + collapsed indicator)
         let config = DisplayConfig {
@@ -238,7 +238,7 @@ mod integration_tests {
         
         let root_path = builder.root_path().join("test_dir2");
         let gitignore = GitIgnore::load(&root_path).unwrap();
-        let root = scan_directory(&root_path, &gitignore, usize::MAX, None).unwrap();
+        let root = scan_directory_with_legacy_gitignore(&root_path, &gitignore, usize::MAX, None).unwrap();
         
         let output = format_tree(&root, &config).unwrap();
         
@@ -260,7 +260,7 @@ mod integration_tests {
         
         let root_path = builder.root_path().join("test_dir");
         let gitignore = GitIgnore::load(&root_path).unwrap();
-        let root = scan_directory(&root_path, &gitignore, usize::MAX, None).unwrap();
+        let root = scan_directory_with_legacy_gitignore(&root_path, &gitignore, usize::MAX, None).unwrap();
         
         let config = DisplayConfig {
             max_lines: 10,
@@ -321,7 +321,7 @@ mod integration_tests {
         let gitignore = GitIgnore::load(&root_path).unwrap();
         
         // Test with show_system_dirs = false first
-        let root = scan_directory(&root_path, &gitignore, usize::MAX, Some(false)).unwrap();
+        let root = scan_directory_with_legacy_gitignore(&root_path, &gitignore, usize::MAX, Some(false)).unwrap();
         
         // First test with show_system_dirs = false (default)
         let config = DisplayConfig {
@@ -355,7 +355,7 @@ mod integration_tests {
         config_with_system.show_system_dirs = true;
         
         // Rescan with show_system_dirs = true
-        let root_with_system = scan_directory(&root_path, &gitignore, usize::MAX, Some(true)).unwrap();
+        let root_with_system = scan_directory_with_legacy_gitignore(&root_path, &gitignore, usize::MAX, Some(true)).unwrap();
         
         let output = format_tree(&root_with_system, &config_with_system).unwrap();
         println!("Output with show_system_dirs:\n{}", output);

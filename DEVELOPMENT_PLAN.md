@@ -32,18 +32,25 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
 
 ### Critical Fixes (Immediate Priority)
 
-1. **Fix System Directory Exclusion Logic**
-   - Add a flag to explicitly show contents of system directories
-   - Modify `display/state.rs` to respect this flag when rendering directories
-   - Update state logic to process gitignored directories when explicitly requested
+1. ✅ **Fix System Directory Exclusion Logic**
+   - ✅ Add a flag to explicitly show contents of system directories
+   - ✅ Modify `display/state.rs` to respect this flag when rendering directories
+   - ✅ Update state logic to process gitignored directories when explicitly requested
 
-2. **Improve .gitignore Detection and Handling**
-   - Implement recursive .gitignore detection to respect nested .gitignore files
-   - Load and apply .gitignore rules at each directory level
-   - Cache gitignore patterns to avoid redundant file reads
-   - Add option to toggle .gitignore consideration
+2. ✅ **Improve .gitignore Detection and Handling**
+   - ✅ Implement recursive .gitignore detection to respect nested .gitignore files
+   - ✅ Load and apply .gitignore rules at each directory level
+   - ✅ Cache gitignore patterns to avoid redundant file reads
+   - ✅ Add option to toggle .gitignore consideration
 
-3. **Explicit Directory Inclusion Options**
+3. **Implement Smart Filtering Rules System**
+   - Integrate the rule-based filtering architecture
+   - Convert gitignore handling to use the rule system
+   - Implement project type detection
+   - Create specialized rules for different project types and contexts
+   - Add configuration for enabling/disabling rules
+
+4. **Explicit Directory Inclusion Options**
    - Add command-line parameter to explicitly include directories that would otherwise be folded
    - Support glob patterns for directory inclusion/exclusion
    - Fix logic handling of included directories to properly scan and display their contents
@@ -127,81 +134,303 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
    - Configuration file support for project defaults
    - Add support for config file in multiple formats (.json, .toml)
 
-### Phase 5: Feature Expansion (Long Term)
+### Phase 5: Advanced Filtering and Extensibility
 
-1. **Advanced Filtering**
-   - Implement complex file filtering based on patterns
+1. **Context-Aware Smart Filtering System**
+   - Implement a plugin-based filtering system for intelligent directory/file visibility rules
+   - Detect project types and apply specialized filtering rules (Rust, JavaScript, Python, etc.)
+   - Create a rule registry with context detection and conditional application
+   - Support weighted rule scoring for complex decision making
+   
+2. **Smart Filtering Architecture**
+   ```rust
+   // Rule evaluation context containing project and environmental information
+   pub struct FilterContext<'a> {
+       project_types: Vec<ProjectType>,         // Detected project type(s)
+       path: &'a Path,                          // Path being evaluated
+       parent_path: &'a Path,                   // Parent directory
+       depth: usize,                            // Depth in directory tree
+       has_file: HashMap<String, bool>,         // Cache of file existence tests
+       extension_counts: HashMap<String, usize>, // Statistics on file types
+       root_path: &'a Path,                     // Root directory being scanned
+       // Additional context that rules might need
+   }
+   
+   // Filter rule trait for extensibility
+   pub trait FilterRule: Send + Sync {
+       // Unique identifier for the rule
+       fn id(&self) -> &str;
+       
+       // Rule priority (higher numbers = higher priority)
+       fn priority(&self) -> i32;
+       
+       // Whether this rule applies to the given context
+       fn applies_to(&self, context: &FilterContext) -> bool;
+       
+       // Evaluate the rule, returning a score between 0.0 and 1.0
+       // Higher scores indicate higher confidence in hiding
+       fn evaluate(&self, context: &FilterContext) -> f32;
+       
+       // Custom display annotation for when this rule triggers
+       fn annotation(&self) -> &str { "[filtered]" }
+   }
+   
+   // Registry for all filter rules
+   pub struct FilterRegistry {
+       rules: Vec<Box<dyn FilterRule>>,
+       threshold: f32,                       // Minimum score to hide an item
+   }
+   ```
+
+3. **Built-in Smart Filter Rules**
+   - **GitIgnoreRule**: Apply .gitignore rules in a context-aware manner
+     - Load nested .gitignore files at each directory level
+     - Respect negation patterns (!pattern)
+     - Support all standard gitignore syntax
+   - **BuildOutputRule**: Detect and hide build output directories by project type
+     - `target/` in Rust projects (detected by Cargo.toml)
+     - `dist/`, `build/` in JS/TS projects (detected by package.json)
+     - `__pycache__/`, `*.pyc` in Python projects
+     - `bin/`, `obj/` in .NET projects
+   - **DependencyRule**: Hide dependency directories by project type
+     - `node_modules/` in JavaScript projects
+     - `.venv/`, `env/` in Python projects
+     - `vendor/` in Go projects
+   - **VCSRule**: Hide version control system directories
+     - `.git/` for Git repositories
+     - `.svn/` for Subversion repositories
+     - `.hg/` for Mercurial repositories  
+     - `.jj/` for Jujutsu repositories
+   - **DevEnvironmentRule**: Hide editor/IDE configs (.vscode, .idea, .zed)
+   - **GeneratedCodeRule**: Hide auto-generated code based on markers or patterns
+   - **TestDataRule**: Conditionally hide large test data directories
+   - **TemporaryFileRule**: Hide temporary files like backups, logs, and cache files
+   - **DocumentationRule**: Context-aware handling of documentation directories and files
+
+4. **User Configuration for Filtering**
+   - Support custom rule definitions in `.smart-tree.toml`
+   - Project-level configuration with inheritance
+   - Global user configuration in home directory
+   - Allow enabling/disabling/configuring specific rules
+   - Support custom scoring thresholds
+   - Provide detailed debugging for rule application
+   - Example configuration:
+     ```toml
+     # .smart-tree.toml
+     
+     # Enable or disable all rules (true by default)
+     enabled = true
+     
+     # Global threshold (0.0-1.0)
+     threshold = 0.5
+     
+     # Configure specific rules
+     [rules.vcs]
+     enabled = true
+     annotation = "[version control]"
+     
+     [rules.build_output]
+     enabled = true
+     annotation = "[build]"
+     
+     # Custom rule definition
+     [rules.custom]
+     patterns = ["*.tmp", "*.cache"]
+     annotation = "[temp files]"
+     priority = 50
+     ```
+
+5. **Other Advanced Filtering**
    - Add time-based filtering (recently modified, older than X)
    - Support regex-based content filtering
 
-2. **Export Capabilities**
+### Phase 6: Extended Features
+
+1. **Export Capabilities**
    - JSON/XML export of directory structure
    - HTML visualization export
    - Integration with other tools via standardized output formats
 
-3. **Advanced Integration**
+2. **Advanced Integration**
    - Add plugin system for custom extensions
    - Implement extensions for popular development tools
    - Add language-specific statistics gathering
 
 ## Implementation Details for Upcoming Work
 
-### Gitignore and System Directory Handling Design
+### Smart Filtering Rules Implementation Plan
 
-1. **Recursive GitIgnore Detection**
-   ```
-   App
-   ├── .gitignore (ignores *.log)
-   ├── src/
-   │   ├── .gitignore (ignores *.tmp)
-   │   └── components/
-   │       ├── .gitignore (ignores *.bak)
-   │       └── ...
-   └── ...
-   ```
-
-   - Each directory's .gitignore rules should apply to itself and all subdirectories
-   - Later .gitignore files take precedence over earlier ones
-   - Parent rules can be negated by child rules (using ! prefix)
-
-2. **Scanner Implementation**
+1. **Integrate Rules System with Existing Scanner**
    ```rust
-   pub struct GitIgnoreContext {
-       patterns: Vec<GitIgnore>,
-   }
-
-   impl GitIgnoreContext {
-       // Load initial .gitignore from root
-       pub fn new(root: &Path) -> Self { ... }
-
-       // Check if path matches any pattern in any loaded .gitignore
-       pub fn is_ignored(&self, path: &Path) -> bool { ... }
-
-       // Process a directory, loading any .gitignore found there
-       pub fn process_directory(&mut self, dir_path: &Path) { ... }
+   // In scanner.rs
+   pub fn scan_directory(
+       root: &Path,
+       rule_registry: &mut FilterRegistry,
+       max_depth: usize,
+       // Other parameters...
+   ) -> Result<DirectoryEntry> {
+       // Create context for this path
+       let mut context = FilterContext::new(path, parent_path, root_path, depth);
+       
+       // Detect project types
+       context.detect_project_types();
+       
+       // Check if this path should be hidden based on rules
+       let (should_hide, annotation) = rule_registry.should_hide(&context);
+       
+       if should_hide && !show_hidden {
+           // Create a collapsed representation
+           // ...
+           return Ok(collapsed_entry);
+       }
+       
+       // Regular directory traversal
+       // ...
    }
    ```
 
-3. **System Directory Handling**
-   - Add new CLI option: `--show-system-dirs` to show system directories
-   - Modify scanner to mark system dirs but traverse them if explicitly requested
-   - Update display logic to respect this setting
+2. **Convert GitIgnore to Rule System**
+   ```rust
+   // GitIgnore rule implementation
+   pub struct GitIgnoreRule {
+       contexts: HashMap<PathBuf, GitIgnoreContext>,
+   }
+   
+   impl FilterRule for GitIgnoreRule {
+       fn id(&self) -> &str {
+           "gitignore"
+       }
+       
+       fn priority(&self) -> i32 {
+           100 // High priority
+       }
+       
+       fn applies_to(&self, context: &FilterContext) -> bool {
+           true // Always check gitignore rules
+       }
+       
+       fn evaluate(&self, context: &FilterContext) -> f32 {
+           let path = context.path;
+           
+           // Get or create GitIgnoreContext for this directory
+           let gitignore_context = self.get_context_for_path(path);
+           
+           // Check if path is ignored
+           if gitignore_context.is_ignored(path) {
+               0.95 // High confidence
+           } else {
+               0.0 // Not ignored
+           }
+       }
+       
+       fn annotation(&self) -> &str {
+           "[gitignored]"
+       }
+   }
+   ```
+
+3. **Project Type Detection**
+   ```rust
+   // In rules.rs
+   impl<'a> FilterContext<'a> {
+       pub fn detect_project_types(&mut self) {
+           // Check for Rust project
+           if self.root_path.join("Cargo.toml").exists() {
+               self.project_types.push(ProjectType::Rust);
+           }
+           
+           // Check for Node.js project
+           if self.root_path.join("package.json").exists() {
+               self.project_types.push(ProjectType::NodeJs);
+           }
+           
+           // Check for Python project
+           if self.root_path.join("pyproject.toml").exists() || 
+              self.root_path.join("setup.py").exists() {
+               self.project_types.push(ProjectType::Python);
+           }
+           
+           // Additional project types...
+       }
+   }
+   ```
+
+4. **Rule Configuration System**
+   ```rust
+   // Configuration structs
+   pub struct RuleConfig {
+       enabled: bool,
+       threshold: Option<f32>,
+       annotation: Option<String>,
+       // Rule-specific options
+       options: HashMap<String, toml::Value>,
+   }
+   
+   pub struct FilterConfig {
+       enabled: bool,
+       threshold: f32,
+       rules: HashMap<String, RuleConfig>,
+   }
+   
+   // Loading config
+   impl FilterConfig {
+       pub fn load() -> Self {
+           // Load from .smart-tree.toml in current dir
+           let project_config = Self::load_from_file(Path::new(".smart-tree.toml"));
+           
+           // Load from user home
+           let home_config = Self::load_from_home();
+           
+           // Merge configs with project taking precedence
+           Self::merge(home_config, project_config)
+       }
+   }
+   ```
+
+5. **CLI Interface Updates**
+   ```
+   smart-tree [OPTIONS] [PATH]
+   
+   Options:
+     --show-hidden            Show items that would normally be hidden by rules
+     --rule-debug             Show detailed information about rule application
+     --disable-rule <RULE>    Disable specific rule (can be used multiple times)
+     --enable-rule <RULE>     Enable specific rule (can be used multiple times)
+     --list-rules             List all available rules
+   ```
 
 ## Test Strategy
 
-1. **Unit Tests for GitIgnore Context**
+1. **Unit Tests for Rules System**
+   - Test individual rule implementations
+   - Test rule registry and priority system
+   - Test project type detection for different project structures
+   - Test rule configuration loading from TOML files
+   
+2. **Unit Tests for GitIgnore Rules**
    - Test recursive .gitignore file loading
    - Test pattern application from multiple .gitignore files
    - Test precedence rules between parent and child patterns
 
-2. **Integration Tests with Nested Repositories**
+3. **Integration Tests for Project-Specific Rules**
+   - Create test projects for each supported language/framework 
+   - Test detection of project types and correct rule application
+   - Test specific filtering of build directories based on project type
+
+4. **Integration Tests with Nested Repositories**
    - Set up test directories with nested git repositories
    - Verify correct traversal behavior with and without explicit inclusion
-   - Test with `--show-system-dirs` flag
+   - Test with `--show-system-dirs` and `--show-hidden` flags
 
-3. **End-to-End Testing**
-   - Create a test suite that verifies real-world nested repository scenarios
-   - Test performance with large repositories containing multiple .gitignore files
+5. **End-to-End Testing**
+   - Create a test suite that verifies real-world project scenarios
+   - Test performance with large codebases
+   - Benchmark rule evaluation performance
+
+6. **Configuration Tests**
+   - Test loading and merging of different configuration files
+   - Test precedence of CLI options over configuration files
+   - Test user configuration in home directory
 
 ## Implementation Notes
 
