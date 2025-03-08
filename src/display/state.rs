@@ -249,7 +249,13 @@ impl<'a> DisplayState<'a> {
                 break;
             }
 
-            let is_last = section.tail_count == 0 && i == section.head_count - 1;
+            // An item is the last visible one if:
+            // 1. There are no tail items, and this is the last head item
+            // 2. AND either there are no hidden items or only 1 hidden item (which we won't show)
+            let is_last = section.tail_count == 0
+                && i == section.head_count - 1
+                && (section.total_hidden == 0 || section.total_hidden == 1);
+
             trace!(
                 "Head item {}/{}: name={}, is_last={}",
                 i + 1,
@@ -283,7 +289,8 @@ impl<'a> DisplayState<'a> {
         }
 
         // Show hidden items message if needed
-        if section.total_hidden > 0 && self.lines_remaining > 0 {
+        // Skip showing hidden message when only 1 item is hidden (no space saved)
+        if section.total_hidden > 1 && self.lines_remaining > 0 {
             debug!(
                 "Adding hidden items indicator: {} items",
                 section.total_hidden
@@ -303,11 +310,7 @@ impl<'a> DisplayState<'a> {
             );
 
             let hidden_text = colors::colorize(
-                &format!(
-                    "... {} item{} hidden ...",
-                    section.total_hidden,
-                    if section.total_hidden == 1 { "" } else { "s" }
-                ),
+                &format!("... {} items hidden ...", section.total_hidden),
                 colors::get_hidden_items_color(self.config),
                 self.config,
             );
@@ -327,6 +330,8 @@ impl<'a> DisplayState<'a> {
                     break;
                 }
 
+                // In the tail section, an item is the last one if it's the last item in the tail
+                // This is always correct since the tail is at the end of the directory listing
                 let is_last = i == section.tail_count - 1;
                 trace!(
                     "Tail item {}/{}: name={}, is_last={}",
@@ -347,7 +352,16 @@ impl<'a> DisplayState<'a> {
 
                 if item.is_dir && !item.is_gitignored && self.lines_remaining > 0 {
                     debug!("Processing directory: {}", item.name);
-                    let new_prefix = format!("{}{}", prefix, if is_last { "    " } else { "│   " });
+                    // Use the tree spaces and vertical constants for consistency
+                    let new_prefix = format!(
+                        "{}{}",
+                        prefix,
+                        if is_last {
+                            colors::TREE_SPACE
+                        } else {
+                            colors::TREE_VERTICAL
+                        }
+                    );
                     self.show_items(&item.children, &new_prefix);
                 }
             }

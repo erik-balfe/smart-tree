@@ -492,3 +492,127 @@ fn test_extended_head_tail_pattern() {
         "Should not exceed line limit"
     );
 }
+
+#[test]
+fn test_last_item_connector() {
+    use test_utils::create_test_entry;
+
+    // Create a directory with a few files to test last item connector
+    let files = vec![
+        create_test_entry("file1.rs", false, vec![]),
+        create_test_entry("file2.rs", false, vec![]),
+        create_test_entry("file3.rs", false, vec![]),
+    ];
+
+    let root_contents = vec![create_test_entry("src", true, files)];
+
+    let config = DisplayConfig {
+        max_lines: 20,
+        dir_limit: 20,
+        sort_by: SortBy::Name,
+        dirs_first: false,
+        use_colors: false,
+        color_theme: ColorTheme::None,
+        use_emoji: false,
+        size_colorize: false,
+        date_colorize: false,
+        detailed_metadata: false,
+    };
+
+    let mut state = DisplayState::new(config.max_lines, &config);
+    state.show_items(&root_contents, "");
+
+    let output = state.output;
+    println!("Output:\n{}", output);
+
+    // The last file should use L-shape (corner) connector
+    let lines: Vec<_> = output.lines().collect();
+
+    // Find the line with file3.rs (which should be the last item)
+    let file3_line = lines
+        .iter()
+        .find(|l| l.contains("file3.rs"))
+        .expect("file3.rs should be in output");
+
+    // Check that it has the corner (L-shape) connector
+    assert!(
+        file3_line.contains("└──"),
+        "Last item in directory should use L-shape connector: {}",
+        file3_line
+    );
+}
+
+#[test]
+fn test_no_collapse_single_item() {
+    use test_utils::create_test_entry;
+
+    // Create a directory with three files to test collapsing behavior
+    let files = vec![
+        create_test_entry("file1.rs", false, vec![]),
+        create_test_entry("file2.rs", false, vec![]), // This will be hidden
+        create_test_entry("file3.rs", false, vec![]),
+    ];
+
+    let root_contents = vec![create_test_entry("src", true, files)];
+
+    // Configure to only show 2 lines in directory (force 1 item to be hidden)
+    let config = DisplayConfig {
+        max_lines: 5, // Root + src + 2 files + maybe hidden indicator
+        dir_limit: 2, // Only show 2 files in directory
+        sort_by: SortBy::Name,
+        dirs_first: false,
+        use_colors: false,
+        color_theme: ColorTheme::None,
+        use_emoji: false,
+        size_colorize: false,
+        date_colorize: false,
+        detailed_metadata: false,
+    };
+
+    let mut state = DisplayState::new(config.max_lines, &config);
+    state.show_items(&root_contents, "");
+
+    let output = state.output;
+    println!("Output with 1 item hidden:\n{}", output);
+
+    // We should NOT see a "1 item hidden" message, since it doesn't save space
+    assert!(
+        !output.contains("1 item hidden"),
+        "Should not collapse when only 1 item would be hidden"
+    );
+
+    // Now try with 2 items hidden
+    let more_files = vec![
+        create_test_entry("file1.rs", false, vec![]),
+        create_test_entry("file2.rs", false, vec![]), // These will be hidden
+        create_test_entry("file3.rs", false, vec![]), // These will be hidden
+        create_test_entry("file4.rs", false, vec![]),
+    ];
+
+    let more_root_contents = vec![create_test_entry("src", true, more_files)];
+
+    let more_config = DisplayConfig {
+        max_lines: 5,
+        dir_limit: 2,
+        sort_by: SortBy::Name,
+        dirs_first: false,
+        use_colors: false,
+        color_theme: ColorTheme::None,
+        use_emoji: false,
+        size_colorize: false,
+        date_colorize: false,
+        detailed_metadata: false,
+    };
+
+    let mut more_state = DisplayState::new(more_config.max_lines, &more_config);
+    more_state.show_items(&more_root_contents, "");
+
+    let more_output = more_state.output;
+    println!("Output with 2 items hidden:\n{}", more_output);
+
+    // We SHOULD see "items hidden" message for multiple items
+    assert!(
+        more_output.contains("items hidden"),
+        "Should collapse when 2 or more items would be hidden"
+    );
+}
