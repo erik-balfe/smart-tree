@@ -4,6 +4,7 @@ mod display;
 mod gitignore;
 mod log_macros;
 mod scanner;
+mod tests;
 mod types;
 
 // Re-export public items
