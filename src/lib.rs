@@ -3,6 +3,7 @@
 mod display;
 mod gitignore;
 mod log_macros;
+pub mod rules;
 mod scanner;
 mod tests;
 mod types;
@@ -20,7 +21,7 @@ pub fn scan_directory_simple(
     gitignore: &mut GitIgnoreContext, 
     max_depth: usize
 ) -> anyhow::Result<DirectoryEntry> {
-    scanner::scan_directory(root, gitignore, max_depth, None)
+    scanner::scan_directory(root, gitignore, None, max_depth, None, None)
 }
 
 // Another wrapper for backward compatibility with older GitIgnore API
@@ -59,6 +60,8 @@ pub fn scan_directory_with_legacy_gitignore(
             },
             children: Vec::new(),
             is_gitignored: gitignore.is_ignored(root),
+            filtered_by: None,
+            filter_annotation: None,
         });
     }
 
@@ -76,6 +79,8 @@ pub fn scan_directory_with_legacy_gitignore(
         },
         children: Vec::new(),
         is_gitignored: gitignore.is_ignored(root),
+        filtered_by: None,
+        filter_annotation: None,
     };
 
     // For gitignored directories, decide whether to traverse or just provide basic metadata
@@ -152,6 +157,8 @@ pub fn scan_directory_with_legacy_gitignore(
                     },
                     children: Vec::new(),
                     is_gitignored,
+                    filtered_by: None,
+                    filter_annotation: None,
                 });
 
                 // Update parent size
@@ -174,6 +181,8 @@ pub fn scan_directory_with_legacy_gitignore(
                 },
                 children: Vec::new(),
                 is_gitignored,
+                filtered_by: None,
+                filter_annotation: None,
             });
         }
     }

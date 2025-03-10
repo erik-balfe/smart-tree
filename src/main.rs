@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use smart_tree::{format_tree, scan_directory, ColorTheme, DisplayConfig, GitIgnoreContext, SortBy};
+use smart_tree::rules::{FilterRegistry, create_default_registry};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -65,6 +66,30 @@ struct Args {
     /// Ignore .gitignore files when scanning
     #[arg(long)]
     no_gitignore: bool,
+    
+    /// Show items that would normally be hidden by filtering rules
+    #[arg(long)]
+    show_hidden: bool,
+    
+    /// Disable specific filtering rule (can be used multiple times)
+    #[arg(long, value_name = "RULE")]
+    disable_rule: Vec<String>,
+    
+    /// Enable specific filtering rule (can be used multiple times)
+    #[arg(long, value_name = "RULE")]
+    enable_rule: Vec<String>,
+    
+    /// List all available filtering rules
+    #[arg(long)]
+    list_rules: bool,
+    
+    /// Show detailed information about rule application
+    #[arg(long)]
+    rule_debug: bool,
+    
+    /// Disable smart filtering rules completely
+    #[arg(long)]
+    no_rules: bool,
 }
 
 fn init_logger() {
@@ -114,6 +139,10 @@ fn main() -> Result<()> {
         date_colorize: args.color_dates,
         detailed_metadata: args.detailed,
         show_system_dirs: args.show_system_dirs,
+        show_filtered: args.show_hidden,
+        disable_rules: args.disable_rule,
+        enable_rules: args.enable_rule,
+        rule_debug: args.rule_debug,
     };
 
     // Initialize the GitIgnoreContext
@@ -124,12 +153,41 @@ fn main() -> Result<()> {
         GitIgnoreContext::new(&args.path)?
     };
     
+    // Handle --list-rules flag
+    if args.list_rules {
+        println!("Available filtering rules:\n");
+        println!("  gitignore      - Files/directories matched by .gitignore patterns");
+        println!("  vcs            - Version control system directories (.git, .svn, .hg, .jj)");
+        println!("  build_output   - Build output directories (target, dist, build)");
+        println!("  dependencies   - Dependency directories (node_modules, venv)");
+        println!("  dev_environment - Development environment configs (.vscode, .idea)");
+        println!("\nUsage examples:\n");
+        println!("  --disable-rule vcs             # Show VCS directories");
+        println!("  --disable-rule dependencies    # Show dependency directories");
+        println!("  --show-hidden                  # Show all items that would be filtered");
+        return Ok(());
+    }
+    
+    // Initialize rules registry if rules are enabled
+    let mut rule_registry_option = if args.no_rules {
+        None
+    } else {
+        // Create the rule registry
+        let mut registry = create_default_registry(&args.path)?;
+        
+        // TODO: Handle enable/disable rules here
+        
+        Some(registry)
+    };
+    
     // Scan the directory tree
     let root = scan_directory(
         &args.path, 
-        &mut gitignore_ctx, 
+        &mut gitignore_ctx,
+        rule_registry_option.as_ref(),
         args.max_depth, 
-        Some(config.show_system_dirs)
+        Some(config.show_system_dirs),
+        Some(config.show_filtered),
     )?;
     
     // Format and print the tree

@@ -55,6 +55,7 @@ $ smart-tree
 - **Immediately spot what matters** - Recent changes and important files stand out
 - **Project-aware** - Understands different project types (Rust, JavaScript, Python, etc.)
 - **No visual clutter** - Automatically filters system directories like `.git` and `node_modules`
+- **Smart rule system** - Uses context-aware rules to decide what to show and what to hide
 - **Rich context** - File sizes, modification times, and directory statistics
 - **Beautiful visualization** - Color-coded file types and emoji icons
 - **Lightning fast** - Navigates even massive repositories with ease
@@ -88,7 +89,50 @@ Smart Tree's context-preserving output is ideal for AI assistants like GitHub Co
 smart-tree --max-lines 25 --detailed
 ```
 
-### 4. Repository Exploration
+### 4. Smart Filtering for Different Project Types
+
+```
+$ smart-tree --list-rules
+Available filtering rules:
+
+  gitignore      - Files/directories matched by .gitignore patterns
+  vcs            - Version control system directories (.git, .svn, .hg, .jj)
+  build_output   - Build output directories (target, dist, build)
+  dependencies   - Dependency directories (node_modules, venv)
+  dev_environment - Development environment configs (.vscode, .idea)
+
+Usage examples:
+
+  --disable-rule vcs             # Show VCS directories
+  --disable-rule dependencies    # Show dependency directories
+  --show-hidden                  # Show all items that would be filtered
+```
+
+Smart Tree understands your project's context and automatically applies the most appropriate filtering rules for your specific language or framework:
+
+```
+$ smart-tree
+.
+├── .git (1 files, 1.0MB, modified just now) [folded: system]
+├── .gitignore (13B, modified just now)
+├── .vscode (1 files, 1.0MB, modified just now) [folded: system]
+├── Cargo.toml (0B, modified just now)
+├── README.md (0B, modified just now)
+├── examples (1 files, 0B, modified just now)
+│   └── demo.rs (0B, modified just now)
+├── file1.bak (0B, modified just now) [[gitignored]]
+├── src (2 files, 0B, modified just now)
+│   ├── main.rs (0B, modified just now)
+│   └── lib.rs (0B, modified just now)
+└── target (10 files, 14B, modified just now) [folded: system]
+```
+
+The tool automatically:
+- Detects Rust projects by `Cargo.toml` and filters `target/` as build output
+- Respects `.gitignore` rules (notice `file1.bak` is marked as gitignored)
+- Identifies and filters system directories like `.git` and `.vscode`
+
+### 5. Repository Exploration
 
 ```bash
 $ smart-tree --emoji --color-sizes --color-theme dark
@@ -138,11 +182,20 @@ smart-tree -L 3
 # Show system directories (like .git, node_modules, etc.)
 smart-tree --show-system-dirs
 
+# Show items that would normally be filtered out
+smart-tree --show-hidden
+
 # Customize filtering rules
 smart-tree --disable-rule vcs --disable-rule build_output
 
 # List all available rules
 smart-tree --list-rules
+
+# Show details about rule application
+smart-tree --rule-debug
+
+# Disable all rules completely
+smart-tree --no-rules
 
 # Show help with all options
 smart-tree --help

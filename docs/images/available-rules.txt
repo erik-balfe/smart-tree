@@ -1,0 +1,13 @@
+Available filtering rules:
+
+  gitignore      - Files/directories matched by .gitignore patterns
+  vcs            - Version control system directories (.git, .svn, .hg, .jj)
+  build_output   - Build output directories (target, dist, build)
+  dependencies   - Dependency directories (node_modules, venv)
+  dev_environment - Development environment configs (.vscode, .idea)
+
+Usage examples:
+
+  --disable-rule vcs             # Show VCS directories
+  --disable-rule dependencies    # Show dependency directories
+  --show-hidden                  # Show all items that would be filtered

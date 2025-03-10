@@ -294,7 +294,7 @@ impl FilterRule for BuildOutputRule {
         }
     }
     
-    fn evaluate(&self, context: &FilterContext) -> f32 {
+    fn evaluate(&self, _context: &FilterContext) -> f32 {
         // High confidence for build directories
         0.9
     }
@@ -328,7 +328,7 @@ impl FilterRule for DependencyRule {
         }
     }
     
-    fn evaluate(&self, context: &FilterContext) -> f32 {
+    fn evaluate(&self, _context: &FilterContext) -> f32 {
         // High confidence for dependency directories
         0.95
     }
@@ -358,7 +358,7 @@ impl FilterRule for VCSRule {
         matches!(file_name, ".git" | ".svn" | ".hg" | ".jj")
     }
     
-    fn evaluate(&self, context: &FilterContext) -> f32 {
+    fn evaluate(&self, _context: &FilterContext) -> f32 {
         0.85
     }
     
@@ -387,7 +387,7 @@ impl FilterRule for DevEnvironmentRule {
         matches!(file_name, ".vscode" | ".idea" | ".eclipse" | ".zed")
     }
     
-    fn evaluate(&self, context: &FilterContext) -> f32 {
+    fn evaluate(&self, _context: &FilterContext) -> f32 {
         0.8
     }
     
@@ -396,14 +396,80 @@ impl FilterRule for DevEnvironmentRule {
     }
 }
 
+/// Rule for applying gitignore patterns
+pub struct GitIgnoreRule {
+    contexts: HashMap<PathBuf, crate::gitignore::GitIgnoreContext>,
+}
+
+impl GitIgnoreRule {
+    pub fn new(root_path: &Path) -> Result<Self, anyhow::Error> {
+        let mut contexts = HashMap::new();
+        let root_context = crate::gitignore::GitIgnoreContext::new(root_path)?;
+        contexts.insert(root_path.to_path_buf(), root_context);
+        
+        Ok(Self { contexts })
+    }
+    
+    /// Get or create a GitIgnoreContext for the given path
+    #[allow(dead_code)]
+    fn get_context_for_path(&mut self, _path: &Path) -> &mut crate::gitignore::GitIgnoreContext {
+        let root_path = self.contexts.keys().next().unwrap().clone();
+        self.contexts.get_mut(&root_path).unwrap()
+    }
+}
+
+impl FilterRule for GitIgnoreRule {
+    fn id(&self) -> &str {
+        "gitignore"
+    }
+    
+    fn priority(&self) -> i32 {
+        100 // High priority
+    }
+    
+    fn applies_to(&self, _context: &FilterContext) -> bool {
+        true // Always check gitignore rules
+    }
+    
+    fn evaluate(&self, context: &FilterContext) -> f32 {
+        let path = context.path;
+        
+        // Get the GitIgnoreContext for this path's root
+        let root_path = self.contexts.keys().next().unwrap();
+        let gitignore_context = self.contexts.get(root_path).unwrap();
+        
+        // We need to create a mutable copy since is_ignored requires mutation
+        // In a production implementation, we would refactor this to avoid the clone
+        let mut gitignore_context_clone = gitignore_context.clone();
+        
+        // Check if path is ignored
+        if gitignore_context_clone.is_ignored(path) {
+            0.95 // High confidence
+        } else {
+            0.0 // Not ignored
+        }
+    }
+    
+    fn annotation(&self) -> &str {
+        "[gitignored]"
+    }
+}
+
 /// Create a registry with all default rules enabled
-pub fn create_default_registry() -> FilterRegistry {
+pub fn create_default_registry(root_path: &Path) -> Result<FilterRegistry, anyhow::Error> {
     let mut registry = FilterRegistry::new();
+    
+    // Add the gitignore rule
+    let gitignore_rule = GitIgnoreRule::new(root_path)?;
+    registry.add_rule(gitignore_rule);
+    
+    // Add other built-in rules
     registry.add_rule(BuildOutputRule);
     registry.add_rule(DependencyRule);
     registry.add_rule(VCSRule);
     registry.add_rule(DevEnvironmentRule);
-    registry
+    
+    Ok(registry)
 }
 
 #[cfg(test)]

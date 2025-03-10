@@ -211,7 +211,20 @@ impl<'a> DisplayState<'a> {
                 output.push_str(&format!(" {}{}\n", colorized_metadata, folded_text));
             }
         } else {
-            output.push_str(&format!(" {}\n", colorized_metadata));
+            // Add basic output with metadata
+            output.push_str(&format!(" {}", colorized_metadata));
+            
+            // Add filter annotation if present
+            if let Some(annotation) = &entry.filter_annotation {
+                let annotation_text = colors::colorize(
+                    &format!(" [{}]", annotation),
+                    colors::get_filter_annotation_color(self.config),
+                    self.config,
+                );
+                output.push_str(&annotation_text);
+            }
+            
+            output.push_str("\n");
         }
 
         trace!("Formatted output: {}", output.trim());
@@ -287,9 +300,11 @@ impl<'a> DisplayState<'a> {
 
             // Process directories if:
             // 1. We have lines remaining AND
-            // 2. Either it's not gitignored OR we explicitly want to show system dirs
-            if item.is_dir && self.lines_remaining > 0 && 
-               (!item.is_gitignored || self.config.show_system_dirs) {
+            // 2. Not filtered or we explicitly want to show filtered items
+            let should_skip = (item.is_gitignored && !self.config.show_system_dirs) || 
+                             (item.filtered_by.is_some() && !self.config.show_filtered);
+                             
+            if item.is_dir && self.lines_remaining > 0 && !should_skip {
                 debug!("Processing directory: {}", item.name);
                 let new_prefix = format!(
                     "{}{}",
@@ -368,9 +383,11 @@ impl<'a> DisplayState<'a> {
 
                 // Process directories if:
                 // 1. We have lines remaining AND
-                // 2. Either it's not gitignored OR we explicitly want to show system dirs
-                if item.is_dir && self.lines_remaining > 0 && 
-                   (!item.is_gitignored || self.config.show_system_dirs) {
+                // 2. Not filtered or we explicitly want to show filtered items
+                let should_skip = (item.is_gitignored && !self.config.show_system_dirs) || 
+                                 (item.filtered_by.is_some() && !self.config.show_filtered);
+                                 
+                if item.is_dir && self.lines_remaining > 0 && !should_skip {
                     debug!("Processing directory: {}", item.name);
                     // Use the tree spaces and vertical constants for consistency
                     let new_prefix = format!(

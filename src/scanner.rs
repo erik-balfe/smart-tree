@@ -1,4 +1,5 @@
 use crate::gitignore::GitIgnoreContext;
+use crate::rules::{FilterContext, FilterRegistry};
 use crate::types::{DirectoryEntry, EntryMetadata};
 use anyhow::Result;
 use log::{debug, warn};
@@ -8,11 +9,15 @@ use std::path::Path;
 pub fn scan_directory(
     root: &Path,
     gitignore_ctx: &mut GitIgnoreContext,
+    rule_registry: Option<&FilterRegistry>,
     max_depth: usize,
     show_system_dirs: Option<bool>,
+    show_filtered: Option<bool>,
 ) -> Result<DirectoryEntry> {
-    // Default to not showing system directories if not specified
+    // Default settings
     let show_system = show_system_dirs.unwrap_or(false);
+    let show_hidden = show_filtered.unwrap_or(false);
+    
     let root_metadata = fs::metadata(root)?;
     let root_name = root
         .file_name()
@@ -22,6 +27,34 @@ pub fn scan_directory(
     // Process this directory to load any .gitignore file before checking ignore status
     if let Err(e) = gitignore_ctx.process_directory(root) {
         warn!("Error processing gitignore in {}: {}", root.display(), e);
+    }
+
+    // Get parent path for context
+    let parent_path = root.parent().unwrap_or(root);
+    
+    // Check filtering rules if provided
+    let is_gitignored = gitignore_ctx.is_ignored(root);
+    let mut filtered_by = None;
+    let mut filter_annotation = None;
+    
+    // Apply rules if registry is provided
+    if let Some(registry) = rule_registry {
+        // Create context for this path
+        let mut context = FilterContext::new(
+            root,
+            parent_path,
+            root, // Using root as project root for now
+            0,    // Depth will be set correctly in recursive calls
+        );
+        
+        // Detect project types
+        context.detect_project_types();
+        
+        // Evaluate rules
+        if let Some((_, annotation)) = registry.should_hide(&context) {
+            filtered_by = Some(String::from("rule")); // Would ideally track specific rule ID
+            filter_annotation = Some(String::from(annotation));
+        }
     }
 
     // Early return for non-directories or when max_depth is 0
@@ -37,10 +70,16 @@ pub fn scan_directory(
                 files_count: 0,
             },
             children: Vec::new(),
-            is_gitignored: gitignore_ctx.is_ignored(root),
+            is_gitignored,
+            filtered_by,
+            filter_annotation,
         });
     }
 
+    // Check if this entry should be filtered based on rules
+    let should_filter = (is_gitignored && !show_system) || 
+                        (filtered_by.is_some() && !show_hidden);
+                        
     // Initialize the root entry with temporary metadata
     // We'll calculate accurate size and file count as we traverse
     let mut root_entry = DirectoryEntry {
@@ -54,13 +93,17 @@ pub fn scan_directory(
             files_count: 0,
         },
         children: Vec::new(),
-        is_gitignored: gitignore_ctx.is_ignored(root),
+        is_gitignored,
+        filtered_by,
+        filter_annotation,
     };
 
-    // For gitignored directories, decide whether to traverse or just provide basic metadata
-    if root_entry.is_gitignored && !show_system {
-        debug!("Skipping deep traversal of system directory: {}", root.display());
-        // If not showing system directories, do a quick scan to get file counts without deep traversal
+    // For filtered directories, decide whether to traverse or just provide basic metadata
+    let should_skip = should_filter;
+                      
+    if should_skip {
+        debug!("Skipping deep traversal of filtered directory: {}", root.display());
+        // Do a quick scan to get file counts without deep traversal
         let mut file_count = 0;
         let mut total_size = 0;
 
@@ -90,7 +133,7 @@ pub fn scan_directory(
 
         return Ok(root_entry);
     }
-    // If we're showing system directories, we'll continue with the normal traversal
+    // If we're showing filtered directories, we'll continue with the normal traversal
 
     let mut entries = Vec::new();
 
@@ -103,11 +146,41 @@ pub fn scan_directory(
         
         // Check if this specific entry is gitignored
         let is_gitignored = gitignore_ctx.is_ignored(&path);
+        
+        // Apply filtering rules if available
+        let mut filtered_by = None;
+        let mut filter_annotation = None;
+        
+        if let Some(registry) = rule_registry {
+            // Create context for this path
+            let mut context = FilterContext::new(
+                &path,
+                root,
+                root, // Using root as project root
+                max_depth, // Current depth level
+            );
+            
+            // Detect project types
+            context.detect_project_types();
+            
+            // Evaluate rules
+            if let Some((_, annotation)) = registry.should_hide(&context) {
+                filtered_by = Some(String::from("rule"));
+                filter_annotation = Some(String::from(annotation));
+            }
+        }
 
         if metadata.is_dir() {
             // Recursively scan subdirectories if depth allows
             if max_depth > 1 {
-                match scan_directory(&path, gitignore_ctx, max_depth - 1, Some(show_system)) {
+                match scan_directory(
+                    &path, 
+                    gitignore_ctx, 
+                    rule_registry,
+                    max_depth - 1, 
+                    Some(show_system),
+                    Some(show_hidden),
+                ) {
                     Ok(dir_entry) => {
                         // Update parent metadata
                         root_entry.metadata.files_count += dir_entry.metadata.files_count;
@@ -132,6 +205,8 @@ pub fn scan_directory(
                     },
                     children: Vec::new(),
                     is_gitignored,
+                    filtered_by,
+                    filter_annotation,
                 });
 
                 // Update parent size
@@ -154,6 +229,8 @@ pub fn scan_directory(
                 },
                 children: Vec::new(),
                 is_gitignored,
+                filtered_by,
+                filter_annotation,
             });
         }
     }

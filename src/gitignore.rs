@@ -241,6 +241,7 @@ impl GitIgnore {
 }
 
 /// A context that manages multiple .gitignore files throughout a directory structure
+#[derive(Clone)]
 pub struct GitIgnoreContext {
     // Base directory for relative path calculations
     root_dir: PathBuf,

@@ -356,6 +356,15 @@ pub(super) fn get_separator_color(config: &DisplayConfig) -> Color {
     }
 }
 
+/// Get color for filter annotations
+pub(super) fn get_filter_annotation_color(config: &DisplayConfig) -> Color {
+    match config.color_theme {
+        ColorTheme::Light => Color::Cyan,
+        ColorTheme::Dark => Color::BrightCyan,
+        _ => Color::BrightCyan,
+    }
+}
+
 /// Colorize a string if colors are enabled, otherwise return it as-is
 pub(super) fn colorize(text: &str, color: Color, config: &DisplayConfig) -> String {
     if should_use_colors(config) {

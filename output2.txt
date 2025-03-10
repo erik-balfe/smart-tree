@@ -1,0 +1,14 @@
+.
+├── .git (1 files, 1.0MB, modified just now) [folded: system]
+├── .gitignore (13B, modified just now)
+├── .vscode (1 files, 1.0MB, modified just now) [folded: system]
+├── Cargo.toml (0B, modified just now)
+├── README.md (0B, modified just now)
+├── examples (1 files, 0B, modified just now)
+│   └── demo.rs (0B, modified just now)
+├── file1.bak (0B, modified just now) [[gitignored]]
+├── src (2 files, 0B, modified just now)
+│   ├── main.rs (0B, modified just now)
+│   └── lib.rs (0B, modified just now)
+└── target (10 files, 14B, modified just now) [folded: system]
+
