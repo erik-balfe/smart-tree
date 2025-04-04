@@ -25,7 +25,7 @@ impl GitIgnore {
             is_root,
         }
     }
-    
+
     /// Load gitignore patterns from the specified root directory
     pub fn load(root: &Path) -> Result<Self> {
         // System defaults that should always be included
@@ -91,7 +91,7 @@ impl GitIgnore {
             is_root: true,
         })
     }
-    
+
     /// Check if the given path should be ignored according to gitignore rules
     pub fn is_ignored(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy();
@@ -123,7 +123,7 @@ impl GitIgnore {
 
         ignored
     }
-    
+
     /// Load gitignore patterns from a specific gitignore file
     pub fn load_from_file(gitignore_path: &Path, is_root: bool) -> Result<Self> {
         let mut patterns = Vec::new();
@@ -178,18 +178,18 @@ impl GitIgnore {
                 ".vscode",
                 ".zed",
                 // Programming languages
-                "__pycache__",     // Python
-                "venv",            // Python
-                ".venv",           // Python
-                "node_modules",    // Node.js
-                "target",          // Rust
-                "build",           // Generic build
-                "dist",            // Generic distribution
-                "out",             // Generic output
-                "bin",             // Generic binaries
-                ".gradle",         // Gradle
-                ".next",           // Next.js
-                ".nuxt",           // Nuxt.js
+                "__pycache__",  // Python
+                "venv",         // Python
+                ".venv",        // Python
+                "node_modules", // Node.js
+                "target",       // Rust
+                "build",        // Generic build
+                "dist",         // Generic distribution
+                "out",          // Generic output
+                "bin",          // Generic binaries
+                ".gradle",      // Gradle
+                ".next",        // Next.js
+                ".nuxt",        // Nuxt.js
             ]
             .into_iter()
             .map(|p| Pattern::new(&format!("**/{}", p)))
@@ -347,7 +347,7 @@ impl GitIgnoreContext {
             if current == self.root_dir || !current.starts_with(&self.root_dir) {
                 break;
             }
-            
+
             if let Some(parent) = current.parent() {
                 current = parent.to_path_buf();
             } else {
@@ -357,7 +357,7 @@ impl GitIgnoreContext {
 
         // Check gitignores from root to the directory
         dir_chain.reverse();
-        
+
         // Determine if the path is ignored
         let mut is_ignored = false;
         for dir in &dir_chain {
@@ -366,7 +366,7 @@ impl GitIgnoreContext {
                 if gitignore.is_path_ignored(path) {
                     is_ignored = true;
                 }
-                
+
                 // Special case for negated patterns - they should override previous ignores
                 for (pattern, is_negated) in &gitignore.patterns {
                     if *is_negated && pattern.matches(&path.to_string_lossy()) {

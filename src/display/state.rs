@@ -213,7 +213,7 @@ impl<'a> DisplayState<'a> {
         } else {
             // Add basic output with metadata
             output.push_str(&format!(" {}", colorized_metadata));
-            
+
             // Add filter annotation if present
             if let Some(annotation) = &entry.filter_annotation {
                 let annotation_text = colors::colorize(
@@ -223,8 +223,8 @@ impl<'a> DisplayState<'a> {
                 );
                 output.push_str(&annotation_text);
             }
-            
-            output.push_str("\n");
+
+            output.push('\n');
         }
 
         trace!("Formatted output: {}", output.trim());
@@ -301,9 +301,9 @@ impl<'a> DisplayState<'a> {
             // Process directories if:
             // 1. We have lines remaining AND
             // 2. Not filtered or we explicitly want to show filtered items
-            let should_skip = (item.is_gitignored && !self.config.show_system_dirs) || 
-                             (item.filtered_by.is_some() && !self.config.show_filtered);
-                             
+            let should_skip = (item.is_gitignored && !self.config.show_system_dirs)
+                || (item.filtered_by.is_some() && !self.config.show_filtered);
+
             if item.is_dir && self.lines_remaining > 0 && !should_skip {
                 debug!("Processing directory: {}", item.name);
                 let new_prefix = format!(
@@ -384,9 +384,9 @@ impl<'a> DisplayState<'a> {
                 // Process directories if:
                 // 1. We have lines remaining AND
                 // 2. Not filtered or we explicitly want to show filtered items
-                let should_skip = (item.is_gitignored && !self.config.show_system_dirs) || 
-                                 (item.filtered_by.is_some() && !self.config.show_filtered);
-                                 
+                let should_skip = (item.is_gitignored && !self.config.show_system_dirs)
+                    || (item.filtered_by.is_some() && !self.config.show_filtered);
+
                 if item.is_dir && self.lines_remaining > 0 && !should_skip {
                     debug!("Processing directory: {}", item.name);
                     // Use the tree spaces and vertical constants for consistency

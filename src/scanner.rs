@@ -17,7 +17,7 @@ pub fn scan_directory(
     // Default settings
     let show_system = show_system_dirs.unwrap_or(false);
     let show_hidden = show_filtered.unwrap_or(false);
-    
+
     let root_metadata = fs::metadata(root)?;
     let root_name = root
         .file_name()
@@ -31,12 +31,12 @@ pub fn scan_directory(
 
     // Get parent path for context
     let parent_path = root.parent().unwrap_or(root);
-    
+
     // Check filtering rules if provided
     let is_gitignored = gitignore_ctx.is_ignored(root);
     let mut filtered_by = None;
     let mut filter_annotation = None;
-    
+
     // Apply rules if registry is provided
     if let Some(registry) = rule_registry {
         // Create context for this path
@@ -46,10 +46,10 @@ pub fn scan_directory(
             root, // Using root as project root for now
             0,    // Depth will be set correctly in recursive calls
         );
-        
+
         // Detect project types
         context.detect_project_types();
-        
+
         // Evaluate rules
         if let Some((_, annotation)) = registry.should_hide(&context) {
             filtered_by = Some(String::from("rule")); // Would ideally track specific rule ID
@@ -77,9 +77,8 @@ pub fn scan_directory(
     }
 
     // Check if this entry should be filtered based on rules
-    let should_filter = (is_gitignored && !show_system) || 
-                        (filtered_by.is_some() && !show_hidden);
-                        
+    let should_filter = (is_gitignored && !show_system) || (filtered_by.is_some() && !show_hidden);
+
     // Initialize the root entry with temporary metadata
     // We'll calculate accurate size and file count as we traverse
     let mut root_entry = DirectoryEntry {
@@ -100,9 +99,12 @@ pub fn scan_directory(
 
     // For filtered directories, decide whether to traverse or just provide basic metadata
     let should_skip = should_filter;
-                      
+
     if should_skip {
-        debug!("Skipping deep traversal of filtered directory: {}", root.display());
+        debug!(
+            "Skipping deep traversal of filtered directory: {}",
+            root.display()
+        );
         // Do a quick scan to get file counts without deep traversal
         let mut file_count = 0;
         let mut total_size = 0;
@@ -143,26 +145,24 @@ pub fn scan_directory(
         let path = dir_entry.path();
         let metadata = dir_entry.metadata()?;
         let name = dir_entry.file_name().to_string_lossy().to_string();
-        
+
         // Check if this specific entry is gitignored
         let is_gitignored = gitignore_ctx.is_ignored(&path);
-        
+
         // Apply filtering rules if available
         let mut filtered_by = None;
         let mut filter_annotation = None;
-        
+
         if let Some(registry) = rule_registry {
             // Create context for this path
             let mut context = FilterContext::new(
-                &path,
-                root,
-                root, // Using root as project root
+                &path, root, root,      // Using root as project root
                 max_depth, // Current depth level
             );
-            
+
             // Detect project types
             context.detect_project_types();
-            
+
             // Evaluate rules
             if let Some((_, annotation)) = registry.should_hide(&context) {
                 filtered_by = Some(String::from("rule"));
@@ -174,10 +174,10 @@ pub fn scan_directory(
             // Recursively scan subdirectories if depth allows
             if max_depth > 1 {
                 match scan_directory(
-                    &path, 
-                    gitignore_ctx, 
+                    &path,
+                    gitignore_ctx,
                     rule_registry,
-                    max_depth - 1, 
+                    max_depth - 1,
                     Some(show_system),
                     Some(show_hidden),
                 ) {

@@ -65,7 +65,7 @@ fn test_basic_line_limit() {
             size_colorize: false,
             date_colorize: false,
             detailed_metadata: false,
-        show_system_dirs: false,
+            show_system_dirs: false,
         };
 
         let mut state = DisplayState::new(max_lines, &config);
@@ -217,7 +217,7 @@ fn test_real_project_structure() {
             size_colorize: false,
             date_colorize: false,
             detailed_metadata: false,
-        show_system_dirs: false,
+            show_system_dirs: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);
@@ -353,7 +353,7 @@ fn test_expanded_project_structure() {
             size_colorize: false,
             date_colorize: false,
             detailed_metadata: false,
-        show_system_dirs: false,
+            show_system_dirs: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);

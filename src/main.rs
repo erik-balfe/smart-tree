@@ -1,7 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
-use smart_tree::{format_tree, scan_directory, ColorTheme, DisplayConfig, GitIgnoreContext, SortBy};
-use smart_tree::rules::{FilterRegistry, create_default_registry};
+use smart_tree::rules::create_default_registry;
+use smart_tree::{
+    format_tree, scan_directory, ColorTheme, DisplayConfig, GitIgnoreContext, SortBy,
+};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -58,35 +60,35 @@ struct Args {
     /// Display detailed metadata for files and directories
     #[arg(long)]
     detailed: bool,
-    
+
     /// Show system directories like .git, node_modules, target, etc.
     #[arg(long)]
     show_system_dirs: bool,
-    
+
     /// Ignore .gitignore files when scanning
     #[arg(long)]
     no_gitignore: bool,
-    
+
     /// Show items that would normally be hidden by filtering rules
     #[arg(long)]
     show_hidden: bool,
-    
+
     /// Disable specific filtering rule (can be used multiple times)
     #[arg(long, value_name = "RULE")]
     disable_rule: Vec<String>,
-    
+
     /// Enable specific filtering rule (can be used multiple times)
     #[arg(long, value_name = "RULE")]
     enable_rule: Vec<String>,
-    
+
     /// List all available filtering rules
     #[arg(long)]
     list_rules: bool,
-    
+
     /// Show detailed information about rule application
     #[arg(long)]
     rule_debug: bool,
-    
+
     /// Disable smart filtering rules completely
     #[arg(long)]
     no_rules: bool,
@@ -152,7 +154,7 @@ fn main() -> Result<()> {
     } else {
         GitIgnoreContext::new(&args.path)?
     };
-    
+
     // Handle --list-rules flag
     if args.list_rules {
         println!("Available filtering rules:\n");
@@ -167,32 +169,32 @@ fn main() -> Result<()> {
         println!("  --show-hidden                  # Show all items that would be filtered");
         return Ok(());
     }
-    
+
     // Initialize rules registry if rules are enabled
-    let mut rule_registry_option = if args.no_rules {
+    let rule_registry_option = if args.no_rules {
         None
     } else {
         // Create the rule registry
-        let mut registry = create_default_registry(&args.path)?;
-        
+        let registry = create_default_registry(&args.path)?;
+
         // TODO: Handle enable/disable rules here
-        
+
         Some(registry)
     };
-    
+
     // Scan the directory tree
     let root = scan_directory(
-        &args.path, 
+        &args.path,
         &mut gitignore_ctx,
         rule_registry_option.as_ref(),
-        args.max_depth, 
+        args.max_depth,
         Some(config.show_system_dirs),
         Some(config.show_filtered),
     )?;
-    
+
     // Format and print the tree
     let output = format_tree(&root, &config)?;
     println!("{}", output);
-    
+
     Ok(())
 }

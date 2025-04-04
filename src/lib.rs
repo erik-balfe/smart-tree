@@ -14,30 +14,34 @@ pub use gitignore::{GitIgnore, GitIgnoreContext};
 pub use scanner::scan_directory;
 pub use types::{ColorTheme, DirectoryEntry, DisplayConfig, EntryMetadata, SortBy};
 
-// Convenience wrapper for backward compatibility 
-#[deprecated(since = "0.2.1", note = "Use scan_directory with GitIgnoreContext instead")]
+// Convenience wrapper for backward compatibility
+#[deprecated(
+    since = "0.2.1",
+    note = "Use scan_directory with GitIgnoreContext instead"
+)]
 pub fn scan_directory_simple(
-    root: &std::path::Path, 
-    gitignore: &mut GitIgnoreContext, 
-    max_depth: usize
+    root: &std::path::Path,
+    gitignore: &mut GitIgnoreContext,
+    max_depth: usize,
 ) -> anyhow::Result<DirectoryEntry> {
     scanner::scan_directory(root, gitignore, None, max_depth, None, None)
 }
 
 // Another wrapper for backward compatibility with older GitIgnore API
-#[deprecated(since = "0.3.0", note = "Use scan_directory with GitIgnoreContext instead")]
+#[deprecated(
+    since = "0.3.0",
+    note = "Use scan_directory with GitIgnoreContext instead"
+)]
 pub fn scan_directory_with_legacy_gitignore(
     root: &std::path::Path,
-    gitignore: &GitIgnore,  // Using the old GitIgnore API
+    gitignore: &GitIgnore, // Using the old GitIgnore API
     max_depth: usize,
-    show_system_dirs: Option<bool>
+    show_system_dirs: Option<bool>,
 ) -> anyhow::Result<DirectoryEntry> {
     use crate::types::{DirectoryEntry, EntryMetadata};
-    use anyhow::Result;
     use log::{debug, warn};
     use std::fs;
-    use std::path::Path;
-    
+
     // Default to not showing system directories if not specified
     let show_system = show_system_dirs.unwrap_or(false);
     let root_metadata = fs::metadata(root)?;
@@ -85,7 +89,10 @@ pub fn scan_directory_with_legacy_gitignore(
 
     // For gitignored directories, decide whether to traverse or just provide basic metadata
     if root_entry.is_gitignored && !show_system {
-        debug!("Skipping deep traversal of system directory: {}", root.display());
+        debug!(
+            "Skipping deep traversal of system directory: {}",
+            root.display()
+        );
         // If not showing system directories, do a quick scan to get file counts without deep traversal
         let mut file_count = 0;
         let mut total_size = 0;
@@ -116,7 +123,7 @@ pub fn scan_directory_with_legacy_gitignore(
 
         return Ok(root_entry);
     }
-    
+
     let mut entries = Vec::new();
 
     // Read the directory and process entries
@@ -125,14 +132,19 @@ pub fn scan_directory_with_legacy_gitignore(
         let path = dir_entry.path();
         let metadata = dir_entry.metadata()?;
         let name = dir_entry.file_name().to_string_lossy().to_string();
-        
+
         // Check if this specific entry is gitignored
         let is_gitignored = gitignore.is_ignored(&path);
 
         if metadata.is_dir() {
             // Recursively scan subdirectories if depth allows
             if max_depth > 1 {
-                match scan_directory_with_legacy_gitignore(&path, gitignore, max_depth - 1, Some(show_system)) {
+                match scan_directory_with_legacy_gitignore(
+                    &path,
+                    gitignore,
+                    max_depth - 1,
+                    Some(show_system),
+                ) {
                     Ok(dir_entry) => {
                         // Update parent metadata
                         root_entry.metadata.files_count += dir_entry.metadata.files_count;
