@@ -24,6 +24,8 @@ mod test_utils {
             },
             children,
             is_gitignored: false,
+            filtered_by: None,
+            filter_annotation: None,
         }
     }
 
@@ -66,6 +68,10 @@ fn test_basic_line_limit() {
             date_colorize: false,
             detailed_metadata: false,
             show_system_dirs: false,
+            show_filtered: false,
+            disable_rules: Vec::new(),
+            enable_rules: Vec::new(),
+            rule_debug: false,
         };
 
         let mut state = DisplayState::new(max_lines, &config);
@@ -102,6 +108,10 @@ fn test_head_tail_pattern() {
         date_colorize: false,
         detailed_metadata: false,
         show_system_dirs: false,
+        show_filtered: false,
+        disable_rules: Vec::new(),
+        enable_rules: Vec::new(),
+        rule_debug: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -157,6 +167,10 @@ fn test_nested_directory_budget() {
         date_colorize: false,
         detailed_metadata: false,
         show_system_dirs: false,
+        show_filtered: false,
+        disable_rules: Vec::new(),
+        enable_rules: Vec::new(),
+        rule_debug: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -218,6 +232,10 @@ fn test_real_project_structure() {
             date_colorize: false,
             detailed_metadata: false,
             show_system_dirs: false,
+            show_filtered: false,
+            disable_rules: Vec::new(),
+            enable_rules: Vec::new(),
+            rule_debug: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);
@@ -354,6 +372,10 @@ fn test_expanded_project_structure() {
             date_colorize: false,
             detailed_metadata: false,
             show_system_dirs: false,
+            show_filtered: false,
+            disable_rules: Vec::new(),
+            enable_rules: Vec::new(),
+            rule_debug: false,
         };
 
         let mut state = DisplayState::new(config.max_lines, &config);
@@ -469,6 +491,10 @@ fn test_extended_head_tail_pattern() {
         date_colorize: false,
         detailed_metadata: false,
         show_system_dirs: false,
+        show_filtered: false,
+        disable_rules: Vec::new(),
+        enable_rules: Vec::new(),
+        rule_debug: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -524,6 +550,10 @@ fn test_last_item_connector() {
         date_colorize: false,
         detailed_metadata: false,
         show_system_dirs: false,
+        show_filtered: false,
+        disable_rules: Vec::new(),
+        enable_rules: Vec::new(),
+        rule_debug: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -575,6 +605,10 @@ fn test_no_collapse_single_item() {
         date_colorize: false,
         detailed_metadata: false,
         show_system_dirs: false,
+        show_filtered: false,
+        disable_rules: Vec::new(),
+        enable_rules: Vec::new(),
+        rule_debug: false,
     };
 
     let mut state = DisplayState::new(config.max_lines, &config);
@@ -611,6 +645,10 @@ fn test_no_collapse_single_item() {
         date_colorize: false,
         detailed_metadata: false,
         show_system_dirs: false,
+        show_filtered: false,
+        disable_rules: Vec::new(),
+        enable_rules: Vec::new(),
+        rule_debug: false,
     };
 
     let mut more_state = DisplayState::new(more_config.max_lines, &more_config);

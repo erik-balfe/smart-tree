@@ -255,6 +255,10 @@ mod integration_tests {
             date_colorize: false,
             detailed_metadata: false,
             show_system_dirs: false,
+            show_filtered: false,
+            disable_rules: Vec::new(),
+            enable_rules: Vec::new(),
+            rule_debug: false,
         };
 
         let output = format_tree(&root, &config).unwrap();
@@ -317,6 +321,10 @@ mod integration_tests {
             date_colorize: false,
             detailed_metadata: false,
             show_system_dirs: false,
+            show_filtered: false,
+            disable_rules: Vec::new(),
+            enable_rules: Vec::new(),
+            rule_debug: false,
         };
 
         let output = format_tree(&root, &config).unwrap();
@@ -387,6 +395,10 @@ mod integration_tests {
             date_colorize: false,
             detailed_metadata: false,
             show_system_dirs: false,
+            show_filtered: false,
+            disable_rules: Vec::new(),
+            enable_rules: Vec::new(),
+            rule_debug: false,
         };
 
         let output = format_tree(&root, &config).unwrap();

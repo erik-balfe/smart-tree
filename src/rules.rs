@@ -519,10 +519,10 @@ mod tests {
 
     #[test]
     fn test_registry_evaluation() {
-        let registry = create_default_registry();
+        let root = PathBuf::from("/project");
+        let registry = create_default_registry(&root).unwrap();
         let path = PathBuf::from("/project/target");
         let parent = PathBuf::from("/project");
-        let root = PathBuf::from("/project");
 
         let mut context = FilterContext::new(&path, &parent, &root, 1);
         context.project_types.push(ProjectType::Rust);
