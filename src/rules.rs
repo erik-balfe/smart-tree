@@ -217,6 +217,7 @@ pub trait FilterRule: Send + Sync {
 pub struct FilterRegistry {
     rules: Vec<Box<dyn FilterRule>>,
     threshold: f32,
+    disabled_rules: Vec<String>,
 }
 
 impl Default for FilterRegistry {
@@ -224,6 +225,7 @@ impl Default for FilterRegistry {
         Self {
             rules: Vec::new(),
             threshold: 0.5, // Default threshold is 0.5
+            disabled_rules: Vec::new(),
         }
     }
 }
@@ -246,6 +248,23 @@ impl FilterRegistry {
     pub fn set_threshold(&mut self, threshold: f32) {
         self.threshold = threshold.clamp(0.0, 1.0);
     }
+    
+    /// Disable a specific rule by ID
+    pub fn disable_rule(&mut self, rule_id: &str) {
+        if !self.disabled_rules.contains(&rule_id.to_string()) {
+            self.disabled_rules.push(rule_id.to_string());
+        }
+    }
+    
+    /// Enable a previously disabled rule
+    pub fn enable_rule(&mut self, rule_id: &str) {
+        self.disabled_rules.retain(|id| id != rule_id);
+    }
+
+    /// Check if a rule is disabled
+    pub fn is_rule_disabled(&self, rule_id: &str) -> bool {
+        self.disabled_rules.contains(&rule_id.to_string())
+    }
 
     /// Evaluate if a path should be hidden based on all applicable rules
     pub fn should_hide(&self, context: &FilterContext) -> Option<(bool, &str)> {
@@ -253,6 +272,11 @@ impl FilterRegistry {
         let mut annotation = "[filtered]";
 
         for rule in &self.rules {
+            // Skip disabled rules
+            if self.is_rule_disabled(rule.id()) {
+                continue;
+            }
+            
             if rule.applies_to(context) {
                 let score = rule.evaluate(context);
                 if score > max_score {

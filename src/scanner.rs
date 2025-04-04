@@ -98,7 +98,10 @@ pub fn scan_directory(
     };
 
     // For filtered directories, decide whether to traverse or just provide basic metadata
-    let should_skip = should_filter;
+    // If this is the root path that was explicitly specified, never skip it regardless of filter rules
+    let is_direct_path = root.canonicalize().unwrap_or_else(|_| root.to_path_buf())
+        == Path::new(&root).canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    let should_skip = should_filter && !is_direct_path;
 
     if should_skip {
         debug!(

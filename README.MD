@@ -197,6 +197,9 @@ smart-tree --rule-debug
 # Disable all rules completely
 smart-tree --no-rules
 
+# Show version
+smart-tree -v
+
 # Show help with all options
 smart-tree --help
 ```
@@ -217,6 +220,9 @@ cargo install --path .
 
 # Now you can run from anywhere
 smart-tree [path] [options]
+
+# Check version
+smart-tree -v
 ```
 
 ## 🤝 Contributing

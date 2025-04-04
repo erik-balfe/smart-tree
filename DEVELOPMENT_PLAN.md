@@ -1,5 +1,45 @@
 # Smart Tree Development Plan
 
+## Version Management
+
+Smart Tree uses a versioning system with the following components:
+
+- **Single Source of Truth**: The version is stored in `Cargo.toml` and accessed via `env!("CARGO_PKG_VERSION")`
+- **Version Display**: The current version can be displayed with `smart-tree -v`
+- **Release Management**: The `release.sh` script manages version bumping and release creation
+
+### Using the Release Script
+
+The `release.sh` script provides a convenient way to manage versions:
+
+```bash
+# Show current version
+./release.sh current
+
+# Bump major version (x.0.0)
+./release.sh major
+
+# Bump minor version (0.x.0)
+./release.sh minor
+
+# Bump patch version (0.0.x)
+./release.sh patch
+```
+
+The script will:
+1. Update the version in `Cargo.toml`
+2. Create a Jujutsu bookmark for the version (acts as a tag)
+3. Offer to push changes to the remote repository
+
+### Release Workflow
+
+1. Make your changes to the codebase
+2. Run tests and lint checks: `cargo test && cargo clippy`
+3. Bump the version: `./release.sh [major|minor|patch]`
+4. Push to GitHub when prompted by the script
+5. The GitHub Action will automatically build binaries for all platforms
+6. The GitHub Release will be created from the tag
+
 ## Current Project Status
 
 Smart Tree is a modern directory tree viewer that intelligently displays file hierarchies with an emphasis on readability. Unlike traditional `tree` commands that output everything (often producing thousands of lines), Smart Tree makes smart decisions about what to show and what to fold.
@@ -123,10 +163,11 @@ Smart Tree is a modern directory tree viewer that intelligently displays file hi
 ### Phase 4: Distribution and Integration (Medium Term)
 
 1. **Package and Distribution**
-   - Create installation script (install.sh) for simple cross-platform installation
-   - Package for Homebrew (brew) installation on macOS
-   - Implement continuous integration/deployment pipeline
-   - Set up automated GitHub releases with versioned branches (e.g., 'v0.2.0')
+   - ✅ Create installation script (install.sh) for simple cross-platform installation
+   - ✅ Package for Homebrew (brew) installation on macOS
+   - ✅ Implement continuous integration/deployment pipeline
+   - ✅ Set up automated GitHub releases with versioned tags (e.g., 'v0.2.0')
+   - ✅ Create release script (release.sh) for managing versions
 
 2. **Integration Features**
    - VCS integration (show modified files since last commit)

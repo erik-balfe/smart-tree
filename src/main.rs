@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use log::debug;
 use smart_tree::rules::create_default_registry;
 use smart_tree::{
     format_tree, scan_directory, ColorTheme, DisplayConfig, GitIgnoreContext, SortBy,
@@ -7,7 +8,7 @@ use smart_tree::{
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about)]
+#[command(author, version, about, disable_version_flag = true)]
 struct Args {
     /// Directory path to display
     #[arg(default_value = ".")]
@@ -92,6 +93,10 @@ struct Args {
     /// Disable smart filtering rules completely
     #[arg(long)]
     no_rules: bool,
+
+    /// Display current version
+    #[arg(short = 'v', long)]
+    version: bool,
 }
 
 fn init_logger() {
@@ -111,6 +116,13 @@ fn init_logger() {
 fn main() -> Result<()> {
     init_logger();
     let args = Args::parse();
+    
+    // Check if version flag was used
+    if args.version {
+        let version = env!("CARGO_PKG_VERSION");
+        println!("smart-tree version {}", version);
+        return Ok(());
+    }
 
     // Determine if we should use emoji (default to true unless --no-emoji is specified)
     let use_emoji = if args.no_emoji {
@@ -118,6 +130,10 @@ fn main() -> Result<()> {
     } else {
         args.emoji || !args.no_emoji
     };
+
+    // Clone the rules vectors for later usage
+    let disable_rules = args.disable_rule.clone();
+    let enable_rules = args.enable_rule.clone();
 
     let config = DisplayConfig {
         max_lines: args.max_lines,
@@ -175,9 +191,24 @@ fn main() -> Result<()> {
         None
     } else {
         // Create the rule registry
-        let registry = create_default_registry(&args.path)?;
+        let mut registry = create_default_registry(&args.path)?;
 
-        // TODO: Handle enable/disable rules here
+        // Handle enable/disable rules
+        if !disable_rules.is_empty() || !enable_rules.is_empty() {
+            // Apply rule enabling/disabling
+            
+            // Process rule disabling
+            for rule_id in &disable_rules {
+                debug!("Disabling rule: {}", rule_id);
+                registry.disable_rule(rule_id);
+            }
+            
+            // Process rule enabling
+            for rule_id in &enable_rules {
+                debug!("Enabling rule: {}", rule_id);
+                registry.enable_rule(rule_id);
+            }
+        }
 
         Some(registry)
     };
